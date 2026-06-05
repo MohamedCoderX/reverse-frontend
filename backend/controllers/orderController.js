@@ -1,0 +1,628 @@
+const Order = require('../models/Order');
+const Product = require('../models/Product');
+const { getStockStatus } = require('../models/Product');
+const User = require('../models/User');
+const razorpay = require('../config/razorpay');
+const crypto = require('crypto');
+
+console.log('=== ORDER CONTROLLER LOADED ===');
+
+const generateOrderId = async () => {
+  const now = new Date();
+  const month = now.getMonth();
+  const year = now.getFullYear();
+  
+  let fyStart, fyEnd;
+  if (month >= 3) {
+    fyStart = year;
+    fyEnd = year + 1;
+  } else {
+    fyStart = year - 1;
+    fyEnd = year;
+  }
+  
+  const fyString = `${String(fyStart).slice(-2)}-${String(fyEnd).slice(-2)}`;
+  
+  // Count only the actual paid orders in the database
+  const paidCount = await Order.countDocuments({ isPaid: true });
+  
+  const nextCount = paidCount + 1;
+  return `RR/${String(nextCount).padStart(4, '0')}/${fyString}`;
+};
+
+let emailModule = null;
+let sendOrderEmail = async () => { console.log('Email function not loaded'); };
+try {
+  emailModule = require('../config/email');
+  sendOrderEmail = emailModule.sendOrderEmail;
+  console.log('✅ Email module loaded successfully in orderController');
+} catch (e) {
+  console.log('❌ Email module not available:', e.message);
+}
+
+// @desc    Create new order & Razorpay order
+// @route   POST /api/orders
+// @access  Public (Guest Checkout) or Private
+const addOrderItems = async (req, res) => {
+  const { orderItems, shippingAddress, paymentMethod, shippingCharge } = req.body;
+
+  if (!orderItems || orderItems.length === 0) {
+    res.status(400).json({ message: 'No order items' });
+    return;
+  }
+
+  try {
+    const productIds = orderItems.map(item => item.product);
+
+    if (!productIds.every(id => id && typeof id === 'string' && id.length > 0)) {
+      console.log('Invalid product IDs received:', productIds);
+      res.status(400).json({ message: 'Invalid product ID format', received: productIds });
+      return;
+    }
+
+    const products = await Product.find({ _id: { $in: productIds } });
+
+    if (products.length !== orderItems.length) {
+      res.status(400).json({ message: 'One or more products not found' });
+      return;
+    }
+
+    const productMap = new Map(products.map(p => [p._id.toString(), p]));
+    let itemsPrice = 0;
+    const orderItemsWithPrices = [];
+
+    for (const item of orderItems) {
+      const product = productMap.get(item.product);
+
+      if (!product) {
+        res.status(400).json({ message: `Product not found: ${item.product}` });
+        return;
+      }
+
+      if (product.stockStatus === 'out_of_stock') {
+        res.status(400).json({
+          message: `Product ${product.name} is currently out of stock`
+        });
+        return;
+      }
+
+      if (product.countInStock < item.qty) {
+        res.status(400).json({
+          message: `Insufficient stock for ${product.name}. Available: ${product.countInStock}`
+        });
+        return;
+      }
+
+      const itemTotal = product.price * item.qty;
+      itemsPrice += itemTotal;
+
+      orderItemsWithPrices.push({
+        name: product.name,
+        qty: item.qty,
+        image: product.image,
+        price: product.price,
+        product: product._id
+      });
+    }
+
+    const totalPrice = itemsPrice + (shippingCharge || 0);
+
+    const options = {
+      amount: Math.round(totalPrice * 100),
+      currency: "INR",
+      receipt: `receipt_${Date.now()}`,
+    };
+
+    const razorpayOrder = await razorpay.orders.create(options);
+
+    // Save address to user if logged in
+    if (req.user) {
+      const user = await User.findById(req.user._id);
+      if (user) {
+        user.shippingAddress = shippingAddress;
+        await user.save();
+      }
+    }
+
+    const now = new Date();
+    const hours = now.getHours();
+    let estimatedDelivery;
+
+    const randomHex = crypto.randomBytes(4).toString('hex').toUpperCase();
+    const tempOrderId = `TEMP-${randomHex}`;
+    console.log('Assigned temporary unpaid order ID:', tempOrderId);
+
+    if (hours === 0) {
+      const nextDay = new Date(now);
+      nextDay.setDate(nextDay.getDate() + 1);
+      nextDay.setHours(0, 0, 0, 0);
+      estimatedDelivery = new Date(nextDay);
+      estimatedDelivery.setDate(estimatedDelivery.getDate() + 5);
+    } else {
+      estimatedDelivery = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000);
+    }
+
+    const order = new Order({
+      orderId: tempOrderId,
+      orderItems: orderItemsWithPrices,
+      user: req.user ? req.user._id : null,
+      shippingAddress,
+      paymentMethod,
+      itemsPrice,
+      shippingPrice: shippingCharge || 0,
+      totalPrice,
+      status: 'Packing & Processing',
+      estimatedDelivery: estimatedDelivery,
+      paymentResult: {
+        razorpay_order_id: razorpayOrder.id,
+      },
+    });
+
+    const createdOrder = await order.save();
+    res.status(201).json({
+      order: createdOrder,
+      razorpayOrder: razorpayOrder,
+    });
+  } catch (error) {
+    console.error('ORDER ERROR:', error.name, error.message);
+    res.status(500).json({
+      message: 'Order creation failed',
+      error: error.message
+    });
+  }
+};
+
+// @desc    Update existing order for re-payment
+// @route   POST /api/orders/:id/pay
+// @access  Private
+const createPayLinkForOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+
+    if (order) {
+      if (order.isPaid) {
+        return res.status(400).json({ message: 'Order is already paid' });
+      }
+
+      const options = {
+        amount: Math.round(order.totalPrice * 100),
+        currency: "INR",
+        receipt: `receipt_${order._id}_${Date.now()}`,
+      };
+
+      const razorpayOrder = await razorpay.orders.create(options);
+
+      order.paymentResult = {
+        razorpay_order_id: razorpayOrder.id,
+      };
+
+      await order.save();
+
+      res.json({
+        order,
+        razorpayOrder
+      });
+    } else {
+      res.status(404).json({ message: 'Order not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to create payment link', error: error.message });
+  }
+};
+
+// @desc    Verify Razorpay Payment
+// @route   POST /api/orders/verify
+// @access  Public
+const verifyPayment = async (req, res) => {
+  const {
+    razorpay_order_id,
+    razorpay_payment_id,
+    razorpay_signature,
+    orderId
+  } = req.body;
+
+  if (!orderId) {
+    return res.status(400).json({ message: 'Missing orderId' });
+  }
+
+  const order = await Order.findById(orderId);
+  if (!order) {
+    return res.status(404).json({ message: 'Order not found' });
+  }
+
+  if (order.isPaid) {
+    // Fetch fresh order
+    const freshOrder = await Order.findById(orderId);
+    return res.json({ message: 'Already paid', order: freshOrder });
+  }
+
+  try {
+    // ✅ 1. VERIFY SIGNATURE (STRICT)
+    const expectedSignature = crypto
+      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+      .digest('hex');
+
+    if (expectedSignature !== razorpay_signature) {
+      return res.status(400).json({ message: 'Invalid signature' });
+    }
+
+    // ✅ 2. VERIFY WITH RAZORPAY API
+    const payment = await razorpay.payments.fetch(razorpay_payment_id);
+
+    if (payment.status !== 'captured') {
+      return res.status(400).json({ message: 'Payment not captured' });
+    }
+
+    // ✅ 3. MARK PAID
+    order.isPaid = true;
+    order.paidAt = new Date();
+    if (!order.orderId || !order.orderId.startsWith('RR/')) {
+      order.orderId = await generateOrderId();
+      console.log('Assigned official paid order ID:', order.orderId);
+    }
+    order.paymentResult = {
+      id: razorpay_payment_id,
+      status: 'PAID',
+      razorpay_order_id,
+    };
+
+    const updatedOrder = await order.save();
+
+    console.log('✅ Paid via verify:', updatedOrder._id);
+
+    // ✅ 4. DECREMENT PRODUCT STOCK
+    for (const item of order.orderItems) {
+      const product = await Product.findById(item.product);
+      if (product) {
+        product.previousStock = product.countInStock;
+        product.countInStock = Math.max(0, product.countInStock - item.qty);
+        product.stockStatus = getStockStatus(product.countInStock);
+        await product.save();
+        console.log(`📦 Stock updated for ${product.name}: ${product.countInStock} remaining`);
+      }
+    }
+
+    // ✅ SEND EMAIL (WITH RETRY) - Run in background to not block response
+    console.log('📧 Trying to send email for order (background):', updatedOrder._id);
+    (async () => {
+      try {
+        const user = order.user ? await User.findById(order.user) : null;
+        const email = user?.email || order.shippingAddress?.email || '';
+        console.log('📧 Customer email:', email);
+
+        if (!email) {
+          console.log('📧 No customer email provided, will only send compulsory admin notification');
+        }
+
+        const orderDetails = {
+          orderId: updatedOrder.orderId || updatedOrder._id.toString().slice(-8),
+          customerName: order.shippingAddress.fullName,
+          address: `${order.shippingAddress.address}, ${order.shippingAddress.city}, ${order.shippingAddress.state} - ${order.shippingAddress.zipCode}`,
+          email,
+          phone: order.shippingAddress.phone,
+          altPhone: order.shippingAddress.altPhone,
+          items: order.orderItems,
+          total: order.totalPrice,
+          estimatedDelivery: order.estimatedDelivery,
+        };
+
+        let retries = 3;
+        let emailSent = false;
+        
+        while (retries > 0 && !emailSent) {
+          try {
+            console.log(`📧 Sending email, attempts remaining: ${retries}`);
+            const result = await sendOrderEmail(orderDetails);
+            
+            if (result) {
+              console.log('✅ Email sent successfully');
+              emailSent = true;
+            } else {
+              throw new Error('sendOrderEmail returned false');
+            }
+          } catch (err) {
+            console.log(`❌ Email attempt failed: ${err.message}`);
+            retries -= 1;
+            if (retries > 0) {
+              console.log('⏳ Waiting 5 seconds before retrying...');
+              await new Promise(res => setTimeout(res, 5000));
+            }
+          }
+        }
+        
+        if (!emailSent) {
+          console.log('🚨 CRITICAL: All email retry attempts failed for order:', updatedOrder._id);
+        }
+      } catch (err) {
+        console.log('📧 Email background error (fatal):', err.message);
+      }
+    })();
+
+    res.json({ message: 'Payment verified successfully', order: updatedOrder });
+
+  } catch (error) {
+    console.error('Verify error:', error.message);
+    res.status(500).json({ message: 'Verification failed' });
+  }
+};
+
+// @desc    Get order by ID
+// @route   GET /api/orders/:id
+// @access  Private
+const getOrderById = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+
+    if (order) {
+      res.json(order);
+    } else {
+      res.status(404).json({ message: 'Order not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// @desc    Create payment for existing unpaid order
+// @route   POST /api/orders/:id/pay
+// @access  Private
+const createPaymentForOrder = async (req, res) => {
+  try {
+    console.log('Looking for order:', req.params.id);
+    let order;
+    try {
+      order = await Order.findById(req.params.id);
+    } catch (e) {
+      console.log('Invalid order ID format');
+      res.status(400).json({ message: 'Invalid order ID' });
+      return;
+    }
+    console.log('Order found:', order ? 'yes' : 'no', order ? 'totalPrice: ' + order.totalPrice + ', user: ' + order.user : '');
+
+    if (!order) {
+      res.status(404).json({ message: 'Order not found' });
+      return;
+    }
+
+    // Check if user owns this order (allow if no user on order or user matches)
+    const orderUserId = order.user ? order.user.toString() : null;
+    const reqUserId = req.user ? req.user._id.toString() : null;
+
+    console.log('Order user ID:', orderUserId, 'Request user ID:', reqUserId);
+
+    // Allow if order has no user, or if user matches
+    if (orderUserId && reqUserId && orderUserId !== reqUserId) {
+      res.status(403).json({ message: 'Not authorized' });
+      return;
+    }
+
+    if (order.isPaid) {
+      res.status(400).json({ message: 'Order already paid' });
+      return;
+    }
+
+    if (!order.totalPrice || order.totalPrice <= 0) {
+      res.status(400).json({ message: 'Invalid order amount' });
+      return;
+    }
+
+    const amountInPaise = Math.round(order.totalPrice * 100);
+    console.log('Creating Razorpay order with amount:', amountInPaise, 'paise');
+
+    const options = {
+      amount: amountInPaise,
+      currency: "INR",
+      receipt: `receipt_${order._id}_${Date.now()}`,
+    };
+
+    const razorpayOrder = await razorpay.orders.create(options);
+    console.log('Razorpay order created successfully:', razorpayOrder.id);
+
+    order.paymentResult = {
+      razorpay_order_id: razorpayOrder.id,
+    };
+
+    await order.save();
+
+    res.json({
+      order,
+      razorpayOrder
+    });
+  } catch (error) {
+    console.error('Payment creation error - full details:', error);
+    console.error('Stack:', error.stack);
+    res.status(500).json({ message: 'Failed to create payment', error: error.message });
+  }
+};
+
+// @desc    Get logged in user orders
+// @route   GET /api/orders/myorders
+// @access  Private
+const getMyOrders = async (req, res) => {
+  const orders = await Order.find({ user: req.user._id }).sort({ createdAt: -1 });
+  
+  const ordersWithStatus = orders.map(order => {
+    const orderObj = order.toObject();
+    if (!orderObj.status) {
+      if (orderObj.isDelivered) {
+        orderObj.status = 'Delivered';
+      } else if (orderObj.isPaid) {
+        orderObj.status = 'Shipped';
+      } else {
+        orderObj.status = 'Pending';
+      }
+    }
+    return orderObj;
+  });
+  
+  res.json(ordersWithStatus);
+};
+
+// @desc    Get all orders
+// @route   GET /api/orders
+// @access  Private/Admin
+const getOrders = async (req, res) => {
+  const orders = await Order.find({}).sort({ createdAt: -1 });
+  
+  // Add status field to orders that don't have it (for display only)
+  const ordersWithStatus = orders.map(order => {
+    const orderObj = order.toObject();
+    if (!orderObj.status) {
+      if (orderObj.isDelivered) {
+        orderObj.status = 'Delivered';
+      } else if (orderObj.isPaid) {
+        orderObj.status = 'Shipped';
+      } else {
+        orderObj.status = 'Pending';
+      }
+    }
+    return orderObj;
+  });
+  
+  res.json(ordersWithStatus);
+};
+
+// @desc    Update order to delivered
+// @route   PUT /api/orders/:id/deliver
+// @access  Private/Admin
+const updateOrderToDelivered = async (req, res) => {
+  const order = await Order.findById(req.params.id);
+
+  if (order) {
+    order.isDelivered = true;
+    order.deliveredAt = Date.now();
+    order.status = 'Delivered';
+
+    const updatedOrder = await order.save();
+    res.json(updatedOrder);
+  } else {
+    res.status(404).json({ message: 'Order not found' });
+  }
+};
+
+// @desc    Update order status
+// @route   PUT /api/orders/:id/status
+// @access  Private/Admin
+const updateOrderStatus = async (req, res) => {
+  const { status } = req.body;
+  
+  const order = await Order.findById(req.params.id);
+
+  if (order) {
+    order.status = status;
+    if (status === 'Delivered') {
+      order.isDelivered = true;
+      order.deliveredAt = Date.now();
+    } else {
+      order.isDelivered = false;
+      order.deliveredAt = null;
+    }
+    const updatedOrder = await order.save();
+    res.json(updatedOrder);
+  } else {
+    res.status(404).json({ message: 'Order not found' });
+  }
+};
+
+// @desc    Mark order as paid manually
+// @route   PUT /api/orders/:id/mark-paid
+// @access  Private/Admin
+const markOrderAsPaid = async (req, res) => {
+  const order = await Order.findById(req.params.id);
+
+  if (order) {
+    order.isPaid = true;
+    order.paidAt = Date.now();
+    if (!order.orderId || !order.orderId.startsWith('RR/')) {
+      order.orderId = await generateOrderId();
+      console.log('Assigned official paid order ID (manual):', order.orderId);
+    }
+    order.paymentResult = {
+      id: `manual_${Date.now()}`,
+      status: 'PAID',
+      update_time: new Date().toISOString(),
+      email_address: order.shippingAddress?.email || '',
+    };
+    const updatedOrder = await order.save();
+    res.json(updatedOrder);
+  } else {
+    res.status(404).json({ message: 'Order not found' });
+  }
+};
+
+// @desc    Delete order
+// @route   DELETE /api/orders/:id
+// @access  Private/Admin
+const deleteOrder = async (req, res) => {
+  const order = await Order.findById(req.params.id);
+
+  if (order) {
+    await order.deleteOne();
+    res.json({ message: 'Order deleted' });
+  } else {
+    res.status(404).json({ message: 'Order not found' });
+  }
+};
+
+// @desc    Get orders by phone number
+// @route   GET /api/orders/by-phone
+// @access  Public
+const getOrdersByPhone = async (req, res) => {
+  const { phone } = req.query;
+
+  if (!phone) {
+    return res.status(400).json({ message: 'Phone number is required' });
+  }
+
+  try {
+    // Clean phone number from query to get only digits
+    const cleanPhone = phone.replace(/\D/g, '');
+    let query = { 'shippingAddress.phone': phone };
+    
+    if (cleanPhone.length >= 10) {
+      const last10 = cleanPhone.slice(-10);
+      const regexPattern = last10.split('').map(digit => `${digit}\\D*`).join('') + '$';
+      query = {
+        'shippingAddress.phone': { $regex: new RegExp(regexPattern) }
+      };
+    }
+
+    const orders = await Order.find(query).sort({ createdAt: -1 });
+
+    const ordersWithStatus = orders.map(order => {
+      const orderObj = order.toObject();
+      if (!orderObj.status) {
+        if (orderObj.isDelivered) {
+          orderObj.status = 'Delivered';
+        } else if (orderObj.isPaid) {
+          orderObj.status = 'Shipped';
+        } else {
+          orderObj.status = 'Pending';
+        }
+      }
+      return orderObj;
+    });
+
+    res.json(ordersWithStatus);
+  } catch (error) {
+    console.error('Error fetching orders by phone:', error.message);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+module.exports = {
+  generateOrderId,
+  addOrderItems,
+  createPayLinkForOrder,
+  verifyPayment,
+  getOrderById,
+  createPaymentForOrder,
+  getMyOrders,
+  getOrders,
+  updateOrderToDelivered,
+  updateOrderStatus,
+  markOrderAsPaid,
+  deleteOrder,
+  getOrdersByPhone,
+};
