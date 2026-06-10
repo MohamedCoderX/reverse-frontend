@@ -436,13 +436,46 @@ const createPaymentForOrder = async (req, res) => {
   }
 };
 
+const filterDuplicateOrders = (orders) => {
+  const paidOrders = orders.filter(o => o.isPaid);
+  const filteredOrders = [];
+  
+  for (const order of orders) {
+    if (order.isPaid) {
+      filteredOrders.push(order);
+    } else if (order.orderId && order.orderId.startsWith('TEMP-')) {
+      const hasPaidDuplicate = paidOrders.some(p => {
+        const samePrice = p.totalPrice === order.totalPrice;
+        const isAfter = new Date(p.createdAt) > new Date(order.createdAt);
+        const timeDiff = Math.abs(new Date(p.createdAt) - new Date(order.createdAt));
+        return samePrice && (isAfter || timeDiff < 24 * 60 * 60 * 1000);
+      });
+      if (hasPaidDuplicate) continue;
+      
+      const hasNewerUnpaidDuplicate = filteredOrders.some(u => {
+        if (u.isPaid) return false;
+        const timeDiff = Math.abs(new Date(u.createdAt) - new Date(order.createdAt));
+        const samePrice = u.totalPrice === order.totalPrice;
+        return samePrice && timeDiff < 30 * 60 * 1000;
+      });
+      if (hasNewerUnpaidDuplicate) continue;
+      
+      filteredOrders.push(order);
+    } else {
+      filteredOrders.push(order);
+    }
+  }
+  return filteredOrders;
+};
+
 // @desc    Get logged in user orders
 // @route   GET /api/orders/myorders
 // @access  Private
 const getMyOrders = async (req, res) => {
   const orders = await Order.find({ user: req.user._id }).sort({ createdAt: -1 });
+  const filteredOrders = filterDuplicateOrders(orders);
   
-  const ordersWithStatus = orders.map(order => {
+  const ordersWithStatus = filteredOrders.map(order => {
     const orderObj = order.toObject();
     if (!orderObj.status) {
       if (orderObj.isDelivered) {
@@ -578,19 +611,29 @@ const getOrdersByPhone = async (req, res) => {
   try {
     // Clean phone number from query to get only digits
     const cleanPhone = phone.replace(/\D/g, '');
-    let query = { 'shippingAddress.phone': phone };
+    let query = {
+      $or: [
+        { 'shippingAddress.phone': phone },
+        { 'shippingAddress.altPhone': phone }
+      ]
+    };
     
     if (cleanPhone.length >= 10) {
       const last10 = cleanPhone.slice(-10);
       const regexPattern = last10.split('').map(digit => `${digit}\\D*`).join('') + '$';
+      const regex = new RegExp(regexPattern);
       query = {
-        'shippingAddress.phone': { $regex: new RegExp(regexPattern) }
+        $or: [
+          { 'shippingAddress.phone': { $regex: regex } },
+          { 'shippingAddress.altPhone': { $regex: regex } }
+        ]
       };
     }
 
     const orders = await Order.find(query).sort({ createdAt: -1 });
+    const filteredOrders = filterDuplicateOrders(orders);
 
-    const ordersWithStatus = orders.map(order => {
+    const ordersWithStatus = filteredOrders.map(order => {
       const orderObj = order.toObject();
       if (!orderObj.status) {
         if (orderObj.isDelivered) {
