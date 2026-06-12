@@ -389,9 +389,9 @@ const VideoShowcase = () => {
         {
             id: 1,
             title: "How to Prepare & Use",
-            thumbnail: "https://res.cloudinary.com/dp2yxb1xu/video/upload/v1779715641/video_x3blw7.mp4",
+            thumbnail: "https://streamable.com/4pqykl",
             poster: new URL('../assets/video.webp', import.meta.url).href,
-            duration: "1:30"
+            duration: "3:29"
         }
     ];
 
@@ -473,12 +473,22 @@ const VideoShowcase = () => {
                             >
                                 <X size={24} className="text-white" />
                             </button>
-                            <video
-                                src={selectedVideo.thumbnail}
-                                className="w-full h-full"
-                                controls
-                                autoPlay
-                            />
+                            {selectedVideo.thumbnail.includes('streamable.com') ? (
+                                <iframe
+                                    src={selectedVideo.thumbnail.includes('/e/') ? selectedVideo.thumbnail : selectedVideo.thumbnail.replace('streamable.com/', 'streamable.com/e/')}
+                                    className="w-full h-full"
+                                    frameBorder="0"
+                                    allow="autoplay; fullscreen"
+                                    allowFullScreen
+                                />
+                            ) : (
+                                <video
+                                    src={selectedVideo.thumbnail}
+                                    className="w-full h-full"
+                                    controls
+                                    autoPlay
+                                />
+                            )}
                         </motion.div>
                     </div>
                 )}
