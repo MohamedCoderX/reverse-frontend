@@ -1,4 +1,5 @@
 const Review = require('../models/Review');
+const { deleteFromCloudinary } = require('../config/cloudinary');
 
 const getReviews = async (req, res) => {
   const { type, approved } = req.query;
@@ -42,8 +43,19 @@ const updateReview = async (req, res) => {
 };
 
 const deleteReview = async (req, res) => {
-  await Review.findByIdAndDelete(req.params.id);
-  res.json({ message: 'Review deleted' });
+  const review = await Review.findById(req.params.id);
+  if (review) {
+    if (review.image) {
+      await deleteFromCloudinary(review.image);
+    }
+    if (review.audio) {
+      await deleteFromCloudinary(review.audio);
+    }
+    await Review.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Review deleted' });
+  } else {
+    res.status(404).json({ message: 'Review not found' });
+  }
 };
 
 module.exports = { getReviews, createReview, updateReview, deleteReview };

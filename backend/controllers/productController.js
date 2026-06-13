@@ -1,5 +1,6 @@
 const Product = require('../models/Product');
 const { LOW_STOCK_THRESHOLD, getStockStatus } = require('../models/Product');
+const { deleteFromCloudinary } = require('../config/cloudinary');
 
 // @desc    Fetch all products
 // @route   GET /api/products
@@ -29,6 +30,14 @@ const deleteProduct = async (req, res) => {
   const product = await Product.findById(req.params.id);
 
   if (product) {
+    if (product.image) {
+      await deleteFromCloudinary(product.image);
+    }
+    if (product.images && product.images.length > 0) {
+      for (const imgUrl of product.images) {
+        await deleteFromCloudinary(imgUrl);
+      }
+    }
     await Product.deleteOne({ _id: product._id });
     res.json({ message: 'Product removed' });
   } else {
@@ -67,6 +76,16 @@ const updateProduct = async (req, res) => {
   const product = await Product.findById(req.params.id);
 
   if (product) {
+    if (image && product.image && image !== product.image) {
+      await deleteFromCloudinary(product.image);
+    }
+    if (images && product.images) {
+      const deletedImages = product.images.filter(img => !images.includes(img));
+      for (const imgUrl of deletedImages) {
+        await deleteFromCloudinary(imgUrl);
+      }
+    }
+
     product.name = name || product.name;
     product.price = price || product.price;
     product.description = description || product.description;

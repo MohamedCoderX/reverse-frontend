@@ -3,9 +3,9 @@ const multer = require('multer');
 const path = require('path');
 
 cloudinary.config({
-  cloud_name: 'dfhzk7ngr',
-  api_key: '633227375374137',
-  api_secret: '7Kt1uiUNNN8bDZZqmPbfD7bTeLU',
+  cloud_name: 'dmvrwlypi',
+  api_key: '478391178317562',
+  api_secret: 'kcSAnlJ09OeniSCbaZzDO7BKy1A',
 });
 
 const memoryStorage = multer.memoryStorage();
@@ -60,4 +60,37 @@ const uploadToCloudinary = async (file, folder) => {
   });
 };
 
-module.exports = { cloudinary, imageUpload, audioUpload, uploadToCloudinary };
+const deleteFromCloudinary = async (url) => {
+  if (!url || !url.includes('res.cloudinary.com')) return null;
+  try {
+    const parts = url.split('/upload/');
+    if (parts.length < 2) return null;
+    
+    let pathPart = parts[1];
+    
+    if (pathPart.startsWith('v')) {
+      const slashIndex = pathPart.indexOf('/');
+      if (slashIndex !== -1) {
+        pathPart = pathPart.substring(slashIndex + 1);
+      }
+    }
+    
+    const extIndex = pathPart.lastIndexOf('.');
+    let publicId = extIndex !== -1 ? pathPart.substring(0, extIndex) : pathPart;
+    
+    let resource_type = 'image';
+    if (url.includes('/video/')) {
+      resource_type = 'video';
+    } else if (url.includes('/raw/')) {
+      resource_type = 'raw';
+    }
+
+    const result = await cloudinary.uploader.destroy(publicId, { resource_type });
+    return result;
+  } catch (error) {
+    console.error('Failed to delete from Cloudinary:', error);
+    return null;
+  }
+};
+
+module.exports = { cloudinary, imageUpload, audioUpload, uploadToCloudinary, deleteFromCloudinary };
