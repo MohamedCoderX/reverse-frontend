@@ -283,11 +283,7 @@ const AdminPage = () => {
     setThermalGenerating(order._id);
     try {
       const element = document.createElement('div');
-      element.style.position = 'absolute';
-      element.style.left = '-9999px';
-      element.style.top = '-9999px';
       element.innerHTML = getThermalBillHTML(order);
-      document.body.appendChild(element);
 
       const safeBillId = (order.orderId || order._id.toString().slice(-8)).replace(/\//g, '-').toUpperCase();
       const opt = {
@@ -298,7 +294,6 @@ const AdminPage = () => {
       };
 
       await html2pdf().set(opt).from(element).save();
-      document.body.removeChild(element);
       toast.success('Bill downloaded successfully');
     } catch (err) {
       console.error('Thermal bill error:', err);
@@ -316,11 +311,7 @@ const AdminPage = () => {
 
     try {
       const element = document.createElement('div');
-      element.style.position = 'absolute';
-      element.style.left = '-9999px';
-      element.style.top = '-9999px';
       element.innerHTML = filteredOrders.map(order => getThermalBillHTML(order)).join('<div class="html2pdf__page-break"></div>');
-      document.body.appendChild(element);
 
       let filenameDate = new Date().toISOString().slice(0, 10);
       if (exportDate) {
@@ -338,7 +329,6 @@ const AdminPage = () => {
       };
 
       await html2pdf().set(opt).from(element).save();
-      document.body.removeChild(element);
       toast.success(`${filteredOrders.length} bills generated successfully`);
     } catch (error) {
       console.error('Bulk thermal bill error:', error);
