@@ -201,48 +201,70 @@ const AdminPage = () => {
 
   const getThermalBillHTML = (order) => {
     const targetDate = order.paidAt ? new Date(order.paidAt) : new Date(order.createdAt);
-    const dateStr = targetDate ? `${targetDate.toLocaleDateString('en-IN')} ${targetDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}` : 'N/A';
     
-    const cleanedAddress = (order.shippingAddress?.address || '')
+    let dateStr = 'N/A';
+    if (targetDate) {
+      const day = targetDate.getDate();
+      const month = targetDate.getMonth() + 1;
+      const year = targetDate.getFullYear();
+      let hours = targetDate.getHours();
+      const minutes = String(targetDate.getMinutes()).padStart(2, '0');
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12;
+      hours = hours ? hours : 12; // 0 should be 12
+      const timeStr = `${String(hours).padStart(2, '0')}:${minutes} ${ampm}`;
+      dateStr = `${day}/${month}/${year} ${timeStr}`;
+    }
+    
+    const addressLines = (order.shippingAddress?.address || '')
       .replace(/\r\n/g, '\n')
       .replace(/\r/g, '\n')
       .split('\n')
       .map(part => part.trim())
-      .filter(part => part.length > 0)
-      .map(part => part.endsWith(',') ? part.slice(0, -1).trim() : part)
-      .filter(part => part.length > 0)
-      .join(', ');
+      .filter(part => part.length > 0);
 
     return `
-      <div class="thermal-bill-page" style="width: 384px; height: 575px; padding: 20px; font-family: 'Noto Sans Tamil', system-ui, -apple-system, sans-serif; background: #fff; box-sizing: border-box; color: #000; overflow: hidden;">
-        <div style="text-align: center; font-size: 24px; font-weight: bold; margin-bottom: 4px;">REVERSE RITUALS</div>
-        <div style="text-align: center; font-size: 14px; margin-bottom: 12px;">Natural Hair Care Products</div>
-        <hr style="border: none; border-top: 1px solid #000; margin: 8px 0;" />
-        <div style="font-size: 14px; margin-bottom: 8px;">Order: #${order.orderId || order._id?.toString().slice(-8).toUpperCase() || 'N/A'} | Date: ${dateStr}</div>
-        <hr style="border: none; border-top: 1px solid #000; margin: 8px 0;" />
-        <div style="font-size: 18px; font-weight: bold; margin-bottom: 8px;">DELIVER TO:</div>
-        <hr style="border: none; border-top: 1px solid #000; margin: 8px 0;" />
-        <div style="font-size: 15px; font-weight: bold; margin-bottom: 4px;">${order.shippingAddress?.fullName || 'N/A'}</div>
-        <div style="font-size: 15px; line-height: 1.4; margin-bottom: 4px; word-wrap: break-word;">${cleanedAddress}</div>
-        <div style="font-size: 15px; margin-bottom: 4px;">${order.shippingAddress?.city || ''}, ${order.shippingAddress?.state || ''} - ${order.shippingAddress?.zipCode || ''}</div>
-        <div style="font-size: 15px; margin-bottom: 4px;">Phone: ${order.shippingAddress?.phone || ''}</div>
-        ${order.shippingAddress?.altPhone ? `<div style="font-size: 15px; margin-bottom: 4px;">Alt: ${order.shippingAddress.altPhone}</div>` : ''}
-        <hr style="border: none; border-top: 1px solid #000; margin: 8px 0;" />
-        <div style="font-size: 16px; font-weight: bold; margin-bottom: 8px;">ITEMS (${order.orderItems?.length || 0}):</div>
-        ${(order.orderItems || []).map(item => `
-          <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 6px;">
-            <div style="flex: 1; padding-right: 10px; word-wrap: break-word;">${item.name || 'Item'}</div>
-            <div style="font-weight: bold;">x${item.qty || 0}</div>
+      <div class="thermal-bill-page" style="width: 384px; height: 575px; padding: 20px; font-family: 'Outfit', 'Noto Sans Tamil', system-ui, -apple-system, sans-serif; background: #fff; box-sizing: border-box; color: #000; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between;">
+        <div>
+          <div style="text-align: center; font-size: 24px; font-weight: bold; margin-bottom: 2px; letter-spacing: 0.5px;">REVERSE RITUALS</div>
+          <div style="text-align: center; font-size: 13px; margin-bottom: 8px;">Natural Hair Care Products</div>
+          <hr style="border: none; border-top: 1px dashed #000; margin: 6px 0;" />
+          
+          <div style="font-size: 14px; margin-bottom: 6px;">
+            <strong>Order:</strong> #${order.orderId || order._id?.toString().slice(-8).toUpperCase() || 'N/A'} | <strong>Date:</strong> ${dateStr}
           </div>
-        `).join('')}
-        <hr style="border: none; border-top: 1px solid #000; margin: 8px 0;" />
-        <div style="display: flex; justify-content: space-between; font-size: 15px; font-weight: bold; margin-bottom: 20px;">
-          <div>Total Items:</div>
-          <div>${order.orderItems?.reduce((sum, item) => sum + (item.qty || 0), 0) || 0}</div>
+          <hr style="border: none; border-top: 1px dashed #000; margin: 6px 0;" />
+          
+          <div style="font-size: 16px; font-weight: bold; margin-bottom: 4px;">DELIVER TO:</div>
+          <hr style="border: none; border-top: 1px dashed #000; margin: 6px 0;" />
+          
+          <div style="font-size: 15px; margin-bottom: 2px;">${order.shippingAddress?.fullName || 'N/A'}</div>
+          ${addressLines.map(line => `<div style="font-size: 15px; line-height: 1.3; margin-bottom: 2px; word-wrap: break-word;">${line}</div>`).join('')}
+          <div style="font-size: 15px; margin-bottom: 2px;">${order.shippingAddress?.city || ''} , ${order.shippingAddress?.state || ''} - ${order.shippingAddress?.zipCode || ''}</div>
+          <div style="font-size: 15px; margin-bottom: 2px; display: flex; align-items: center; gap: 4px;">📞 ${order.shippingAddress?.phone || ''}</div>
+          ${order.shippingAddress?.altPhone ? `<div style="font-size: 15px; margin-bottom: 2px;">Alt: ${order.shippingAddress.altPhone}</div>` : ''}
+          <hr style="border: none; border-top: 1px dashed #000; margin: 6px 0;" />
+          
+          <div style="font-size: 16px; font-weight: bold; margin-bottom: 6px;">ITEMS (${order.orderItems?.length || 0}):</div>
+          ${(order.orderItems || []).map(item => `
+            <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 4px;">
+              <div style="flex: 1; padding-right: 10px; word-wrap: break-word;">${item.name || 'Item'}</div>
+              <div style="font-weight: normal; white-space: nowrap;">x${item.qty || 0}</div>
+            </div>
+          `).join('')}
+          <hr style="border: none; border-top: 1px dashed #000; margin: 6px 0;" />
+          
+          <div style="font-size: 15px; font-weight: bold; margin-bottom: 6px;">
+            Total Items: ${order.orderItems?.reduce((sum, item) => sum + (item.qty || 0), 0) || 0}
+          </div>
+          <hr style="border: none; border-top: 1px dashed #000; margin: 6px 0;" />
         </div>
-        <div style="text-align: center; font-size: 13px; margin-bottom: 8px;">Thank you for your order! | reverserituals@gmail.com</div>
-        <hr style="border: none; border-top: 1px solid #000; margin: 8px 0;" />
-        <div style="text-align: center; font-size: 12px;">If customer not answer the call, please call: 7358422064</div>
+        
+        <div>
+          <div style="text-align: center; font-size: 13px; margin-bottom: 6px;">Thank you! | reverserituals@gmail.com</div>
+          <hr style="border: none; border-top: 1px dashed #000; margin: 6px 0;" />
+          <div style="text-align: center; font-size: 11px; line-height: 1.3;">If the customer not answer the call, please call this number. Call : 7358422064</div>
+        </div>
       </div>
     `;
   };
@@ -251,27 +273,32 @@ const AdminPage = () => {
     if (!document.getElementById('tamil-font-link')) {
       const link = document.createElement('link');
       link.id = 'tamil-font-link';
-      link.href = 'https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;700&display=swap';
+      link.href = 'https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&family=Noto+Sans+Tamil:wght@400;700&display=swap';
       link.rel = 'stylesheet';
       document.head.appendChild(link);
     }
-  };
+  }
 
   const downloadThermalBill = async (order) => {
     setThermalGenerating(order._id);
     try {
       const element = document.createElement('div');
+      element.style.position = 'absolute';
+      element.style.left = '-9999px';
+      element.style.top = '-9999px';
       element.innerHTML = getThermalBillHTML(order);
+      document.body.appendChild(element);
 
       const safeBillId = (order.orderId || order._id.toString().slice(-8)).replace(/\//g, '-').toUpperCase();
       const opt = {
         margin: 0,
         filename: `bill-${safeBillId}-${new Date().toISOString().slice(0, 10)}.pdf`,
-        html2canvas: { scale: 1 },
+        html2canvas: { scale: 2, useCORS: true },
         jsPDF: { unit: 'in', format: [4, 6], orientation: 'portrait' }
       };
 
       await html2pdf().set(opt).from(element).save();
+      document.body.removeChild(element);
       toast.success('Bill downloaded successfully');
     } catch (err) {
       console.error('Thermal bill error:', err);
@@ -289,7 +316,11 @@ const AdminPage = () => {
 
     try {
       const element = document.createElement('div');
+      element.style.position = 'absolute';
+      element.style.left = '-9999px';
+      element.style.top = '-9999px';
       element.innerHTML = filteredOrders.map(order => getThermalBillHTML(order)).join('<div class="html2pdf__page-break"></div>');
+      document.body.appendChild(element);
 
       let filenameDate = new Date().toISOString().slice(0, 10);
       if (exportDate) {
@@ -301,12 +332,13 @@ const AdminPage = () => {
       const opt = {
         margin: 0,
         filename: `bills-${filenameDate}.pdf`,
-        html2canvas: { scale: 1 },
+        html2canvas: { scale: 2, useCORS: true },
         jsPDF: { unit: 'in', format: [4, 6], orientation: 'portrait' },
         pagebreak: { mode: ['css', 'legacy'] }
       };
 
       await html2pdf().set(opt).from(element).save();
+      document.body.removeChild(element);
       toast.success(`${filteredOrders.length} bills generated successfully`);
     } catch (error) {
       console.error('Bulk thermal bill error:', error);
