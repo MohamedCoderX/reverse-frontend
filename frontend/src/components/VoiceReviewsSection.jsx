@@ -66,15 +66,15 @@ const VoiceReviewsSection = () => {
   };
 
   const defaultVoiceReviews = [
-    { _id: 'local-1', customerName: "Jagathisan", audio: new URL('../assets/voice/audio-1.opus', import.meta.url).href, productName: "Reverse ritual combo", isLocal: true },
-    { _id: 'local-2', customerName: "Lavanya", audio: new URL('../assets/voice/audio-3.opus', import.meta.url).href, productName: "Reverse ritual combo", isLocal: true },
-    { _id: 'local-3', customerName: "Srinivasan", audio: new URL('../assets/voice/Srini.opus', import.meta.url).href, productName: "Reverse ritual combo", isLocal: true },
-    { _id: 'local-4', customerName: "Saravanavel", audio: new URL('../assets/voice/saravana.opus', import.meta.url).href, productName: "Reverse ritual combo", isLocal: true },
-    { _id: 'local-5', customerName: "Thivan", audio: new URL('../assets/voice/thivan.opus', import.meta.url).href, productName: "Reverse ritual combo", isLocal: true },
-    { _id: 'local-6', customerName: "Gopikrishnan G", audio: new URL('../assets/voice/audio-2.opus', import.meta.url).href, productName: "Reverse ritual combo", isLocal: true },
-    { _id: 'local-7', customerName: "Santhosh", audio: new URL('../assets/voice/santhosh.mp3', import.meta.url).href, productName: "Reverse ritual combo", isLocal: true },
-    { _id: 'local-8', customerName: "Periyanayagasamy", audio: new URL('../assets/voice/peri.opus', import.meta.url).href, productName: "Reverse ritual combo", isLocal: true },
-    { _id: 'local-9', customerName: "Srinivasan", audio: new URL('../assets/voice/srini25.mp3', import.meta.url).href, productName: "Reverse ritual combo", isLocal: true },
+    { _id: 'local-1', customerName: "Jagathisan", audio: "https://res.cloudinary.com/dfhzk7ngr/video/upload/v1781338629/reverse/voice_reviews/lxv6bvta0lyoztsj1hnz.ogg", productName: "Reverse ritual combo", isLocal: true },
+    { _id: 'local-2', customerName: "Lavanya", audio: "https://res.cloudinary.com/dfhzk7ngr/video/upload/v1781338632/reverse/voice_reviews/ltzrl5yyhoni1iku9jud.ogg", productName: "Reverse ritual combo", isLocal: true },
+    { _id: 'local-3', customerName: "Srinivasan", audio: "https://res.cloudinary.com/dfhzk7ngr/video/upload/v1781338628/reverse/voice_reviews/uyewnnsgovdg72e594re.ogg", productName: "Reverse ritual combo", isLocal: true },
+    { _id: 'local-4', customerName: "Saravanavel", audio: "https://res.cloudinary.com/dfhzk7ngr/video/upload/v1781338637/reverse/voice_reviews/unmzckyruayhnwszp9yq.ogg", productName: "Reverse ritual combo", isLocal: true },
+    { _id: 'local-5', customerName: "Thivan", audio: "https://res.cloudinary.com/dfhzk7ngr/video/upload/v1781338640/reverse/voice_reviews/mrm2piqucvqm5prbqbti.ogg", productName: "Reverse ritual combo", isLocal: true },
+    { _id: 'local-6', customerName: "Gopikrishnan G", audio: "https://res.cloudinary.com/dfhzk7ngr/video/upload/v1781338631/reverse/voice_reviews/yqkcytzxnlckrjqabmw3.ogg", productName: "Reverse ritual combo", isLocal: true },
+    { _id: 'local-7', customerName: "Santhosh", audio: "https://res.cloudinary.com/dfhzk7ngr/video/upload/v1781338636/reverse/voice_reviews/ouzu0w7fgnnd7pv2f8jc.mp3", productName: "Reverse ritual combo", isLocal: true },
+    { _id: 'local-8', customerName: "Periyanayagasamy", audio: "https://res.cloudinary.com/dfhzk7ngr/video/upload/v1781338634/reverse/voice_reviews/szc98pqytetnt6wh4zfm.ogg", productName: "Reverse ritual combo", isLocal: true },
+    { _id: 'local-9', customerName: "Srinivasan", audio: "https://res.cloudinary.com/dfhzk7ngr/video/upload/v1781338639/reverse/voice_reviews/cjgtfzwbfczqcrpagpxh.mp3", productName: "Reverse ritual combo", isLocal: true },
   ];
 
   const displayReviews = [...reviews, ...defaultVoiceReviews];
