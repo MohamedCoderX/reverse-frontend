@@ -238,7 +238,7 @@ const faqs = [
 
 {/* Right Image - After (Week 14) */}
                       <img
-                         src="https://res.cloudinary.com/dfhzk7ngr/image/upload/v1781338646/reverse/week_images/kjf6zutfborzpgwq3dgo.webp"
+                         src="https://res.cloudinary.com/dfhzk7ngr/image/upload/f_auto,q_auto/v1781338646/reverse/week_images/kjf6zutfborzpgwq3dgo.webp"
                          className="absolute inset-0 w-full h-full object-cover"
                          alt="Week 14"
                          loading="lazy"
@@ -251,7 +251,7 @@ const faqs = [
                          style={{ clipPath: `inset(0 ${100 - sliderPos}% 0 0)` }}
                       >
                          <img
-                            src="https://res.cloudinary.com/dfhzk7ngr/image/upload/v1781338643/reverse/week_images/x0prbsywhglrtfloictt.webp"
+                            src="https://res.cloudinary.com/dfhzk7ngr/image/upload/f_auto,q_auto/v1781338643/reverse/week_images/x0prbsywhglrtfloictt.webp"
                            className="absolute inset-0 w-full h-full object-cover"
                            alt="Week 1"
                            loading="lazy"
@@ -289,13 +289,13 @@ const faqs = [
                <div className="max-w-6xl mx-auto">
 <div className="flex overflow-x-auto gap-6 pb-8 px-2 scrollbar-hide justify-start">
 {[
-                           { week: '1', title: 'Week 1', img: "https://res.cloudinary.com/dfhzk7ngr/image/upload/v1781338643/reverse/week_images/x0prbsywhglrtfloictt.webp" },
-                           { week: '2', title: 'Week 2', img: "https://res.cloudinary.com/dfhzk7ngr/image/upload/v1781338647/reverse/week_images/yyfhegh1rjltkx5euwjs.webp" },
-                           { week: '4', title: 'Week 4', img: "https://res.cloudinary.com/dfhzk7ngr/image/upload/v1781338649/reverse/week_images/t8n2jqsbmm2yigewkljs.webp" },
-                           { week: '6', title: 'Week 6', img: "https://res.cloudinary.com/dfhzk7ngr/image/upload/v1781338650/reverse/week_images/gfauosm8ol4sqtalpnr8.webp" },
-                           { week: '8', title: 'Week 8', img: "https://res.cloudinary.com/dfhzk7ngr/image/upload/v1781338652/reverse/week_images/hqwdkkchn778vh9iiyyt.webp" },
-                           { week: '12', title: 'Week 12', img: "https://res.cloudinary.com/dfhzk7ngr/image/upload/v1781338645/reverse/week_images/zt13h7evi2hj7rydqouz.webp" },
-                           { week: '14', title: 'Week 14', img: "https://res.cloudinary.com/dfhzk7ngr/image/upload/v1781338646/reverse/week_images/kjf6zutfborzpgwq3dgo.webp" },
+                           { week: '1', title: 'Week 1', img: "https://res.cloudinary.com/dfhzk7ngr/image/upload/f_auto,q_auto/v1781338643/reverse/week_images/x0prbsywhglrtfloictt.webp" },
+                           { week: '2', title: 'Week 2', img: "https://res.cloudinary.com/dfhzk7ngr/image/upload/f_auto,q_auto/v1781338647/reverse/week_images/yyfhegh1rjltkx5euwjs.webp" },
+                           { week: '4', title: 'Week 4', img: "https://res.cloudinary.com/dfhzk7ngr/image/upload/f_auto,q_auto/v1781338649/reverse/week_images/t8n2jqsbmm2yigewkljs.webp" },
+                           { week: '6', title: 'Week 6', img: "https://res.cloudinary.com/dfhzk7ngr/image/upload/f_auto,q_auto/v1781338650/reverse/week_images/gfauosm8ol4sqtalpnr8.webp" },
+                           { week: '8', title: 'Week 8', img: "https://res.cloudinary.com/dfhzk7ngr/image/upload/f_auto,q_auto/v1781338652/reverse/week_images/hqwdkkchn778vh9iiyyt.webp" },
+                           { week: '12', title: 'Week 12', img: "https://res.cloudinary.com/dfhzk7ngr/image/upload/f_auto,q_auto/v1781338645/reverse/week_images/zt13h7evi2hj7rydqouz.webp" },
+                           { week: '14', title: 'Week 14', img: "https://res.cloudinary.com/dfhzk7ngr/image/upload/f_auto,q_auto/v1781338646/reverse/week_images/kjf6zutfborzpgwq3dgo.webp" },
                         ].map((step, i) => (
                         <div
                            key={i}
