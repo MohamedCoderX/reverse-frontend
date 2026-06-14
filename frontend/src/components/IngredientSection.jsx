@@ -203,7 +203,13 @@ const ProductShowcase = () => {
             {/* Modal */}
             <AnimatePresence>
                 {selected && (
-                    <div className="fixed inset-0 z-[1000] flex items-center justify-center p-3 md:p-4">
+                    <motion.div
+                        key="ingredient-modal"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[1000] flex items-center justify-center p-3 md:p-4"
+                    >
                         <motion.div
                             className="absolute inset-0 bg-black/70 backdrop-blur-sm"
                             onClick={() => setSelected(null)}
@@ -292,7 +298,7 @@ const ProductShowcase = () => {
                                 </div>
                             </div>
                         </motion.div>
-                    </div>
+                    </motion.div>
                 )}
             </AnimatePresence>
 
@@ -389,7 +395,7 @@ const VideoShowcase = () => {
         {
             id: 1,
             title: "How to Prepare & Use",
-            thumbnail: "https://streamable.com/4pqykl",
+            thumbnail: "https://res.cloudinary.com/dmvrwlypi/video/upload/q_auto,f_auto/v1781460583/reverse/videos/ldjsjwj9houhrs84ackw.mp4",
             poster: new URL('../assets/video.webp', import.meta.url).href,
             duration: "3:29"
         }
@@ -428,10 +434,6 @@ const VideoShowcase = () => {
                                 />
                                 <div
                                     className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition flex items-center justify-center cursor-pointer"
-                                    onClick={() => {
-                                        setSelectedVideo(video);
-                                        setShowVideo(true);
-                                    }}
                                 >
                                     <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center group-hover:scale-110 transition">
                                         <Play size={24} className="text-white ml-1" fill="white" />
@@ -453,7 +455,13 @@ const VideoShowcase = () => {
             {/* Video Modal */}
             <AnimatePresence>
                 {showVideo && selectedVideo && (
-                    <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
+                    <motion.div
+                        key="video-modal"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[1000] flex items-center justify-center p-4"
+                    >
                         <motion.div
                             className="absolute inset-0 bg-black/90"
                             onClick={() => setShowVideo(false)}
@@ -466,6 +474,7 @@ const VideoShowcase = () => {
                             initial={{ scale: 0.9, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.9, opacity: 0 }}
+                            transition={{ type: "spring", duration: 0.5 }}
                         >
                             <button
                                 onClick={() => setShowVideo(false)}
@@ -475,7 +484,7 @@ const VideoShowcase = () => {
                             </button>
                             {selectedVideo.thumbnail.includes('streamable.com') ? (
                                 <iframe
-                                    src={selectedVideo.thumbnail.includes('/e/') ? selectedVideo.thumbnail : selectedVideo.thumbnail.replace('streamable.com/', 'streamable.com/e/')}
+                                    src={`${selectedVideo.thumbnail.includes('/e/') ? selectedVideo.thumbnail : selectedVideo.thumbnail.replace('streamable.com/', 'streamable.com/e/')}?autoplay=1`}
                                     className="w-full h-full"
                                     frameBorder="0"
                                     allow="autoplay; fullscreen"
@@ -487,10 +496,12 @@ const VideoShowcase = () => {
                                     className="w-full h-full"
                                     controls
                                     autoPlay
+                                    playsInline
+                                    preload="auto"
                                 />
                             )}
                         </motion.div>
-                    </div>
+                    </motion.div>
                 )}
             </AnimatePresence>
         </>
