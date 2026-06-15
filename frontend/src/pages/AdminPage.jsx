@@ -15,6 +15,27 @@ import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as
 import ImageUpload from '../components/ImageUpload';
 import ReviewsSection from './ReviewsSection';
 
+const displayPhone = (phone) => {
+  if (!phone) return '';
+  const trimmed = phone.trim();
+  const digits = trimmed.replace(/\D/g, '');
+  
+  if (digits.length === 10) {
+    return `+91 ${trimmed}`;
+  }
+  
+  if (digits.length === 12 && digits.startsWith('91')) {
+    const last10 = trimmed.slice(-10);
+    return `+91 ${last10}`;
+  }
+  
+  if (digits.startsWith('91')) {
+    return trimmed.startsWith('+') ? trimmed : `+${trimmed}`;
+  }
+  
+  return trimmed;
+};
+
 const AdminPage = () => {
   const { user, logout, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -241,8 +262,8 @@ const AdminPage = () => {
           <div style="font-size: 15px; margin-bottom: 2px;">${order.shippingAddress?.fullName || 'N/A'}</div>
           ${addressLines.map(line => `<div style="font-size: 15px; line-height: 1.3; margin-bottom: 2px; word-wrap: break-word;">${line}</div>`).join('')}
           <div style="font-size: 15px; margin-bottom: 2px;">${order.shippingAddress?.city || ''} , ${order.shippingAddress?.state || ''} - ${order.shippingAddress?.zipCode || ''}</div>
-          <div style="font-size: 15px; margin-bottom: 2px; display: flex; align-items: center; gap: 4px;">📞 ${order.shippingAddress?.phone || ''}</div>
-          ${order.shippingAddress?.altPhone ? `<div style="font-size: 15px; margin-bottom: 2px;">Alt: ${order.shippingAddress.altPhone}</div>` : ''}
+          <div style="font-size: 15px; margin-bottom: 2px; display: flex; align-items: center; gap: 4px;">📞 ${displayPhone(order.shippingAddress?.phone)}</div>
+          ${order.shippingAddress?.altPhone ? `<div style="font-size: 15px; margin-bottom: 2px;">Alt: ${displayPhone(order.shippingAddress.altPhone)}</div>` : ''}
           <hr style="border: none; border-top: 1px dashed #000; margin: 6px 0;" />
           
           <div style="font-size: 16px; font-weight: bold; margin-bottom: 6px;">ITEMS (${order.orderItems?.length || 0}):</div>
@@ -432,7 +453,7 @@ const AdminPage = () => {
       <h4 style="margin: 0 0 15px; color: #064e3b; font-size: 14px; text-transform: uppercase;">Customer Details</h4>
       <p style="margin: 5px 0; font-size: 14px; color: #333;"><strong>Name:</strong> ${order.shippingAddress?.fullName || 'N/A'}</p>
       <p style="margin: 5px 0; font-size: 14px; color: #333;"><strong>Address:</strong> ${order.shippingAddress?.address || ''}, ${order.shippingAddress?.city || ''}, ${order.shippingAddress?.state || ''} - ${order.shippingAddress?.zipCode || ''}</p>
-      <p style="margin: 5px 0; font-size: 14px; color: #333;"><strong>Phone:</strong> ${order.shippingAddress?.phone || 'N/A'}${order.shippingAddress?.altPhone ? ', ' + order.shippingAddress.altPhone : ''}</p>
+      <p style="margin: 5px 0; font-size: 14px; color: #333;"><strong>Phone:</strong> ${displayPhone(order.shippingAddress?.phone) || 'N/A'}${order.shippingAddress?.altPhone ? ', ' + displayPhone(order.shippingAddress.altPhone) : ''}</p>
       <p style="margin: 5px 0; font-size: 14px; color: #333;"><strong>Email:</strong> ${order.shippingAddress?.email || 'N/A'}</p>
     </div>
 
