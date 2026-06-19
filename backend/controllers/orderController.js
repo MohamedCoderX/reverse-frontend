@@ -11,7 +11,7 @@ const generateOrderId = async () => {
   const now = new Date();
   const month = now.getMonth();
   const year = now.getFullYear();
-  
+
   let fyStart, fyEnd;
   if (month >= 3) {
     fyStart = year;
@@ -20,12 +20,12 @@ const generateOrderId = async () => {
     fyStart = year - 1;
     fyEnd = year;
   }
-  
+
   const fyString = `${String(fyStart).slice(-2)}-${String(fyEnd).slice(-2)}`;
-  
+
   // Count only the actual paid orders in the database
   const paidCount = await Order.countDocuments({ isPaid: true });
-  
+
   const nextCount = paidCount + 1;
   return `RR/${String(nextCount).padStart(4, '0')}/${fyString}`;
 };
@@ -75,37 +75,54 @@ const addOrderItems = async (req, res) => {
       const product = productMap.get(item.product);
 
       if (!product) {
-        res.status(400).json({ message: `Product not found: ${item.product}` });
-        return;
+        return res.status(400).json({
+          message: `Product not found: ${item.product}`
+        });
+      }
+
+      // SECURITY: Quantity must be a whole number
+      const qty = Number(item.qty);
+
+      if (
+        !Number.isInteger(qty) ||
+        qty < 1 ||
+        qty > 100
+      ) {
+        return res.status(400).json({
+          message: `Invalid quantity for ${product.name}`
+        });
       }
 
       if (product.stockStatus === 'out_of_stock') {
-        res.status(400).json({
-          message: `Product ${product.name} is currently out of stock`
+        return res.status(400).json({
+          message: `${product.name} is currently out of stock`
         });
-        return;
       }
 
-      if (product.countInStock < item.qty) {
-        res.status(400).json({
+      if (qty > product.countInStock) {
+        return res.status(400).json({
           message: `Insufficient stock for ${product.name}. Available: ${product.countInStock}`
         });
-        return;
       }
 
-      const itemTotal = product.price * item.qty;
+      const itemTotal = Number(product.price) * qty;
       itemsPrice += itemTotal;
 
       orderItemsWithPrices.push({
         name: product.name,
-        qty: item.qty,
+        qty,
         image: product.image,
         price: product.price,
-        product: product._id
+        product: product._id,
       });
     }
 
-    const totalPrice = itemsPrice + (shippingCharge || 0);
+    const safeShippingCharge =
+      typeof shippingCharge === "number" && shippingCharge >= 0
+        ? shippingCharge
+        : 0;
+
+    const totalPrice = itemsPrice + safeShippingCharge;
 
     const options = {
       amount: Math.round(totalPrice * 100),
@@ -309,12 +326,12 @@ const verifyPayment = async (req, res) => {
 
         let retries = 3;
         let emailSent = false;
-        
+
         while (retries > 0 && !emailSent) {
           try {
             console.log(`📧 Sending email, attempts remaining: ${retries}`);
             const result = await sendOrderEmail(orderDetails);
-            
+
             if (result) {
               console.log('✅ Email sent successfully');
               emailSent = true;
@@ -330,7 +347,7 @@ const verifyPayment = async (req, res) => {
             }
           }
         }
-        
+
         if (!emailSent) {
           console.log('🚨 CRITICAL: All email retry attempts failed for order:', updatedOrder._id);
         }
@@ -439,7 +456,7 @@ const createPaymentForOrder = async (req, res) => {
 const filterDuplicateOrders = (orders) => {
   const paidOrders = orders.filter(o => o.isPaid);
   const filteredOrders = [];
-  
+
   for (const order of orders) {
     if (order.isPaid) {
       filteredOrders.push(order);
@@ -451,7 +468,7 @@ const filterDuplicateOrders = (orders) => {
         return samePrice && (isAfter || timeDiff < 24 * 60 * 60 * 1000);
       });
       if (hasPaidDuplicate) continue;
-      
+
       const hasNewerUnpaidDuplicate = filteredOrders.some(u => {
         if (u.isPaid) return false;
         const timeDiff = Math.abs(new Date(u.createdAt) - new Date(order.createdAt));
@@ -459,7 +476,7 @@ const filterDuplicateOrders = (orders) => {
         return samePrice && timeDiff < 30 * 60 * 1000;
       });
       if (hasNewerUnpaidDuplicate) continue;
-      
+
       filteredOrders.push(order);
     } else {
       filteredOrders.push(order);
@@ -474,7 +491,7 @@ const filterDuplicateOrders = (orders) => {
 const getMyOrders = async (req, res) => {
   const orders = await Order.find({ user: req.user._id }).sort({ createdAt: -1 });
   const filteredOrders = filterDuplicateOrders(orders);
-  
+
   const ordersWithStatus = filteredOrders.map(order => {
     const orderObj = order.toObject();
     if (!orderObj.status) {
@@ -488,7 +505,7 @@ const getMyOrders = async (req, res) => {
     }
     return orderObj;
   });
-  
+
   res.json(ordersWithStatus);
 };
 
@@ -497,7 +514,7 @@ const getMyOrders = async (req, res) => {
 // @access  Private/Admin
 const getOrders = async (req, res) => {
   const orders = await Order.find({}).sort({ createdAt: -1 });
-  
+
   // Add status field to orders that don't have it (for display only)
   const ordersWithStatus = orders.map(order => {
     const orderObj = order.toObject();
@@ -512,7 +529,7 @@ const getOrders = async (req, res) => {
     }
     return orderObj;
   });
-  
+
   res.json(ordersWithStatus);
 };
 
@@ -539,7 +556,7 @@ const updateOrderToDelivered = async (req, res) => {
 // @access  Private/Admin
 const updateOrderStatus = async (req, res) => {
   const { status } = req.body;
-  
+
   const order = await Order.findById(req.params.id);
 
   if (order) {
@@ -617,7 +634,7 @@ const getOrdersByPhone = async (req, res) => {
         { 'shippingAddress.altPhone': phone }
       ]
     };
-    
+
     if (cleanPhone.length >= 10) {
       const last10 = cleanPhone.slice(-10);
       const regexPattern = last10.split('').map(digit => `${digit}\\D*`).join('') + '$';
