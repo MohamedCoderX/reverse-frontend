@@ -13,7 +13,9 @@ const ProductPage = () => {
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState('benefits');
-  const { addToCart, clearCart, updateVoiceReviewUrl } = useCart();
+  const { cartItems, addToCart, clearCart, updateVoiceReviewUrl } = useCart();
+  const cartItem = cartItems?.find(item => item._id === id || item.name?.toLowerCase().includes('re-ritual'));
+  const hasVoiceReviewInCart = cartItem?.voiceReviewUrl;
   const navigate = useNavigate();
 
   // Voice Review Recorder States
@@ -337,7 +339,7 @@ const ProductPage = () => {
                   </div>
                 </div>
 
-                {uploadedUrl ? (
+                {uploadedUrl || hasVoiceReviewInCart ? (
                   <div className="p-4 bg-white/60 rounded-2xl border border-green-200 flex flex-col items-center text-center">
                     <div className="w-10 h-10 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-2">
                       <Check size={20} />
