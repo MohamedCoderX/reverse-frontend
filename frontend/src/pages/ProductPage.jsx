@@ -5,6 +5,7 @@ import { ShoppingCart, Star, Check, ArrowLeft, Minus, Plus, Truck, Shield, Leaf,
 import { useCart } from '../context/CartContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
+import { optimizeCloudinaryUrl } from '../utils/imageOptimizer';
 
 const ProductPage = () => {
   const { id } = useParams();
@@ -206,7 +207,7 @@ const ProductPage = () => {
           <div className="relative order-1">
             <div className={`aspect-[4/5] md:aspect-square rounded-xl md:rounded-2xl overflow-hidden bg-white shadow-lg ${isOutOfStock ? 'opacity-75' : ''}`}>
               <img
-                src={product.image}
+                src={optimizeCloudinaryUrl(product.image, 1000)}
                 alt={product.name}
                 className="w-full h-full object-cover"
               />

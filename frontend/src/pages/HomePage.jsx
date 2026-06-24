@@ -12,6 +12,7 @@ import { ShoppingBag, Star, Zap, Leaf, Shield, Heart, Award, CheckCircle2, Play,
 import HairProductSection from '../components/HairProductSection';
 import IngredientsSection from '../components/IngredientSection';
 import ProductsSection from './ProductsSection';
+import { optimizeCloudinaryUrl } from '../utils/imageOptimizer';
 
 
 const HomePage = () => {
@@ -219,7 +220,7 @@ const faqs = [
                            className="w-full md:w-1/2 relative aspect-square rounded-3xl overflow-hidden shadow-2xl border-4 border-white/10 shrink-0 animate-z"
                         >
                            <img 
-                              src={reRitualProduct.image} 
+                              src={optimizeCloudinaryUrl(reRitualProduct.image, 800)} 
                               alt={reRitualProduct.name} 
                               className="w-full h-full object-cover transform hover:scale-105 transition duration-700" 
                            />

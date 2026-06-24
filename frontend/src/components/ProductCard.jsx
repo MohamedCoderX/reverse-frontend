@@ -3,6 +3,7 @@ import { ShoppingCart } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { motion } from 'framer-motion';
+import { optimizeCloudinaryUrl } from '../utils/imageOptimizer';
 
 const ProductCard = ({ product }) => {
   const { addToCart } = useCart();
@@ -29,7 +30,7 @@ const ProductCard = ({ product }) => {
         <motion.img
           whileHover={{ scale: 1.05 }}
           transition={{ duration: 0.4 }}
-          src={product.image}
+          src={optimizeCloudinaryUrl(product.image, 600)}
           alt={product.name}
           className="w-full h-full object-cover"
           loading="lazy"
