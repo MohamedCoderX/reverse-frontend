@@ -395,7 +395,7 @@ const VideoShowcase = () => {
         {
             id: 1,
             title: "How to Prepare & Use",
-            thumbnail: "https://res.cloudinary.com/dmvrwlypi/video/upload/q_auto,f_auto/v1781460583/reverse/videos/ldjsjwj9houhrs84ackw.mp4",
+            thumbnail: "https://www.youtube.com/watch?v=b3pwU9jpzhE",
             poster: new URL('../assets/video.webp', import.meta.url).href,
             duration: "3:29"
         }

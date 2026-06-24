@@ -163,8 +163,8 @@ const sendOrderEmail = async (orderDetails) => {
       </tr>
     `).join('');
 
-    // Full HTML template inline
-    const html = `
+    // HTML template builder
+    const getHtmlTemplate = (voiceHtml) => `
 <!DOCTYPE html>
 <html>
 <head>
@@ -237,7 +237,7 @@ const sendOrderEmail = async (orderDetails) => {
               </table>
             </td>
           </tr>
-          ${voiceReviewHtml}
+          ${voiceHtml}
           <!-- Address & Phone -->
           <tr>
             <td style="padding:0 25px 20px;">
@@ -269,6 +269,9 @@ const sendOrderEmail = async (orderDetails) => {
 </body>
 </html>`;
 
+    const adminHtml = getHtmlTemplate(voiceReviewHtml);
+    const customerHtml = getHtmlTemplate('');
+
     let adminEmailSent = false;
 
     // 1. Compulsorily send to Admin Email
@@ -276,7 +279,7 @@ const sendOrderEmail = async (orderDetails) => {
       from: `"Reverse Rituals" <${process.env.MAIL_USER}>`,
       to: adminEmail,
       subject: `Order Confirmed - #${orderId}`,
-      html: html
+      html: adminHtml
     };
 
     try {
@@ -295,7 +298,7 @@ const sendOrderEmail = async (orderDetails) => {
         from: `"Reverse Rituals" <${process.env.MAIL_USER}>`,
         to: email.trim(),
         subject: `Order Confirmed - #${orderId}`,
-        html: html
+        html: customerHtml
       };
 
       try {

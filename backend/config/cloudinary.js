@@ -46,10 +46,14 @@ const audioUpload = multer({
 
 const uploadToCloudinary = async (file, folder) => {
   return new Promise((resolve, reject) => {
+    // Audio files must be uploaded as resource_type: 'video' in Cloudinary
+    const isAudio = folder === 'audio' || (file.mimetype && file.mimetype.startsWith('audio/'));
+    const resource_type = isAudio ? 'video' : 'auto';
+
     const uploadStream = cloudinary.uploader.upload_stream(
       {
         folder: `reverse/${folder}`,
-        resource_type: 'auto',
+        resource_type,
       },
       (error, result) => {
         if (error) reject(error);
