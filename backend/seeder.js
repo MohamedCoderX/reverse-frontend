@@ -137,7 +137,7 @@ const products = [
   {
     _id: 're-ritual',
     name: 'Re-Ritual',
-    price: 1,
+    price: 299,
     originalPrice: 299,
     description: 'If you’ve already purchased the combo, you can buy Re-Ritual and continue using it regularly for consistent results. It comes with 7 pack of Rosemary Raw Materials.',
     image: 'https://8upload.com/image/c687fcd4a74c72d7/IMG_4138__1_.jpg',
