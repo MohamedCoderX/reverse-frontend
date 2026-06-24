@@ -44,9 +44,10 @@ export const CartProvider = ({ children }) => {
 
   const updateVoiceReviewUrl = (productId, voiceReviewUrl) => {
     setCartItems(
-      cartItems.map((x) =>
-        x._id === productId ? { ...x, voiceReviewUrl } : x
-      )
+      cartItems.map((x) => {
+        const isReRitualMatch = (productId === 're-ritual' || productId?.toLowerCase().includes('re-ritual')) && x.name?.toLowerCase().includes('re-ritual');
+        return (x._id === productId || isReRitualMatch) ? { ...x, voiceReviewUrl } : x;
+      })
     );
   };
 

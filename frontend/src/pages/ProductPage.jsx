@@ -342,19 +342,8 @@ const ProductPage = () => {
                     <div className="w-10 h-10 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-2">
                       <Check size={20} />
                     </div>
-                    <p className="text-sm font-bold text-[#064e3b]">Voice Review Submitted!</p>
-                    <p className="text-xs text-[#064e3b]/60 mt-0.5">Your free extra packet has been activated for this item.</p>
-                    <audio src={uploadedUrl} controls className="h-8 max-w-full mt-4" />
-                    <button 
-                      onClick={() => {
-                        setUploadedUrl('');
-                        localStorage.removeItem(`voiceReviewUrl_${id}`);
-                        deleteRecording();
-                      }}
-                      className="text-xs text-red-500 hover:text-red-700 font-medium underline mt-3 transition-colors"
-                    >
-                      Delete and Record Again
-                    </button>
+                    <p className="text-sm font-bold text-[#064e3b]">Voice review submitted successfully!</p>
+                    <p className="text-xs text-[#064e3b]/80 mt-1 font-medium">You will have 1 extra packet free added to your order.</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
