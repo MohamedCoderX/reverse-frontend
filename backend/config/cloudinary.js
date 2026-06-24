@@ -46,9 +46,9 @@ const audioUpload = multer({
 
 const uploadToCloudinary = async (file, folder) => {
   return new Promise((resolve, reject) => {
-    // Audio files must be uploaded as resource_type: 'video' in Cloudinary
+    // Audio files are uploaded as 'raw' to prevent Cloudinary format transcode/validation delays or hangs
     const isAudio = folder === 'audio' || (file.mimetype && file.mimetype.startsWith('audio/'));
-    const resource_type = isAudio ? 'video' : 'auto';
+    const resource_type = isAudio ? 'raw' : 'auto';
 
     const uploadStream = cloudinary.uploader.upload_stream(
       {
