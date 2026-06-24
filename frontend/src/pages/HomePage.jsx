@@ -203,7 +203,7 @@ const faqs = [
          {/* Dedicated Re-Ritual Section */}
          {!loading && (
             (() => {
-               const reRitualProduct = products.find(p => p._id === 're-ritual' || p.name?.toLowerCase().includes('re-ritual'));
+               const reRitualProduct = products.find(p => p._id === 're-ritual');
                if (!reRitualProduct) return null;
                return (
                   <section className="py-12 md:py-20 px-4 bg-[#fdfbf7] border-t border-[#c5a059]/10">
@@ -224,9 +224,6 @@ const faqs = [
                               alt={reRitualProduct.name} 
                               className="w-full h-full object-cover transform hover:scale-105 transition duration-700" 
                            />
-                           <div className="absolute top-4 left-4 bg-[#c5a059] text-white px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest shadow-md">
-                              Subscribers & Returning Customers
-                           </div>
                         </motion.div>
                         
                         {/* Info side */}
