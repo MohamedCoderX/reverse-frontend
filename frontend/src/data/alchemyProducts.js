@@ -90,7 +90,7 @@ export const alchemyProducts = [
     name: 'Re-Ritual',
     image: new URL('../assets/product-powder .jpeg', import.meta.url).href,
     description: 'If you’ve already purchased the combo, you can buy Re-Ritual and continue using it regularly for consistent results. It comes with 7 pack of Rosemary Raw Materials.',
-    price: 299,
+    price: 1,
     category: 'Hair Care',
     countInStock: 20,
     rating: 4.9,
