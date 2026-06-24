@@ -44,7 +44,7 @@ try {
 // @route   POST /api/orders
 // @access  Public (Guest Checkout) or Private
 const addOrderItems = async (req, res) => {
-  const { orderItems, shippingAddress, paymentMethod, shippingCharge } = req.body;
+  const { orderItems, shippingAddress, paymentMethod, shippingCharge, voiceReviewUrl } = req.body;
 
   if (!orderItems || orderItems.length === 0) {
     res.status(400).json({ message: 'No order items' });
@@ -173,6 +173,7 @@ const addOrderItems = async (req, res) => {
       paymentResult: {
         razorpay_order_id: razorpayOrder.id,
       },
+      voiceReviewUrl: voiceReviewUrl || null,
     });
 
     const createdOrder = await order.save();
@@ -322,6 +323,7 @@ const verifyPayment = async (req, res) => {
           items: order.orderItems,
           total: order.totalPrice,
           estimatedDelivery: order.estimatedDelivery,
+          voiceReviewUrl: updatedOrder.voiceReviewUrl || null,
         };
 
         let retries = 3;

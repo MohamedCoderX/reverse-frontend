@@ -109,7 +109,28 @@ const sendOrderEmail = async (orderDetails) => {
     const adminEmail = process.env.ADMIN_NOTIFY_EMAIL || 'reverserituals@gmail.com';
     console.log('📧 Sending order confirmation for:', orderDetails.orderId);
     
-    const { orderId, customerName, address, items, total, email, phone, altPhone, estimatedDelivery } = orderDetails;
+    const { orderId, customerName, address, items, total, email, phone, altPhone, estimatedDelivery, voiceReviewUrl } = orderDetails;
+
+    let voiceReviewHtml = '';
+    if (voiceReviewUrl) {
+      voiceReviewHtml = `
+        <!-- Voice Review -->
+        <tr>
+          <td style="padding:0 25px 15px;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#eff6ff;border-radius:4px;border:1px solid #bfdbfe;">
+              <tr>
+                <td style="padding:15px;">
+                  <p style="margin:0;font-size:14px;font-weight:bold;color:#1e40af;">🎙️ Inbuilt Voice Review Received (+1 Free Packet)</p>
+                  <p style="margin:5px 0 0;font-size:14px;">
+                    <a href="${voiceReviewUrl}" target="_blank" style="color:#1d4ed8;font-weight:bold;text-decoration:underline;">Click here to listen or download the audio message</a>
+                  </p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      `;
+    }
 
     let deliveryDateStr;
     if (estimatedDelivery) {
@@ -216,6 +237,7 @@ const sendOrderEmail = async (orderDetails) => {
               </table>
             </td>
           </tr>
+          ${voiceReviewHtml}
           <!-- Address & Phone -->
           <tr>
             <td style="padding:0 25px 20px;">

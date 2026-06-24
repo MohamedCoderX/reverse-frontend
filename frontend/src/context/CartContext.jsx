@@ -26,21 +26,28 @@ export const CartProvider = ({ children }) => {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  const addToCart = (product, qty = 1) => {
+  const addToCart = (product, qty = 1, voiceReviewUrl = null) => {
     const existItem = cartItems.find((x) => x._id === product._id);
 
     if (existItem) {
       setCartItems(
         cartItems.map((x) =>
-          x._id === existItem._id ? { ...existItem, qty: existItem.qty + qty } : x
+          x._id === existItem._id 
+            ? { ...existItem, qty: existItem.qty + qty, voiceReviewUrl: voiceReviewUrl || existItem.voiceReviewUrl } 
+            : x
         )
       );
     } else {
-      setCartItems([...cartItems, { ...product, qty }]);
+      setCartItems([...cartItems, { ...product, qty, voiceReviewUrl }]);
     }
+  };
 
-    // Auto open cart drawer on add (for desktop) - REMOVED per user request
-    // setIsCartOpen(true);
+  const updateVoiceReviewUrl = (productId, voiceReviewUrl) => {
+    setCartItems(
+      cartItems.map((x) =>
+        x._id === productId ? { ...x, voiceReviewUrl } : x
+      )
+    );
   };
 
   const removeFromCart = (id) => {
@@ -68,7 +75,7 @@ export const CartProvider = ({ children }) => {
   return (
     <CartContext.Provider value={{ 
       cartItems, addToCart, removeFromCart, updateQuantity, clearCart, cartTotal,
-      isCartOpen, setIsCartOpen
+      isCartOpen, setIsCartOpen, updateVoiceReviewUrl
     }}>
       {children}
     </CartContext.Provider>

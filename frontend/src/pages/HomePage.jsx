@@ -114,6 +114,7 @@ useEffect(() => {
    const productOrder = [
       'alchemy-combo',
       'alchemy-water',
+      're-ritual',
       'neem-comb',
       'scalp-massager',
       'rosemary-comb-combo',
@@ -196,7 +197,107 @@ const faqs = [
             </div> */}
 
 
-         <ProductsSection products={sortedProducts} loading={loading} />
+         <ProductsSection products={sortedProducts.filter(p => p._id !== 're-ritual' && !p.name?.toLowerCase().includes('re-ritual'))} loading={loading} />
+
+         {/* Dedicated Re-Ritual Section */}
+         {!loading && (
+            (() => {
+               const reRitualProduct = products.find(p => p._id === 're-ritual' || p.name?.toLowerCase().includes('re-ritual'));
+               if (!reRitualProduct) return null;
+               return (
+                  <section className="py-12 md:py-20 px-4 bg-[#fdfbf7] border-t border-[#c5a059]/10">
+                     <div className="max-w-6xl mx-auto rounded-[32px] md:rounded-[48px] bg-[#064e3b] text-white p-8 md:p-16 shadow-2xl relative overflow-hidden flex flex-col md:flex-row gap-8 md:gap-12 items-center">
+                        {/* Background Decorative Gradient */}
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,rgba(197,160,89,0.15),transparent_60%)] pointer-events-none" />
+                        
+                        {/* Image side */}
+                        <motion.div 
+                           initial={{ opacity: 0, scale: 0.95 }}
+                           whileInView={{ opacity: 1, scale: 1 }}
+                           viewport={{ once: true }}
+                           transition={{ duration: 0.6 }}
+                           className="w-full md:w-1/2 relative aspect-square rounded-3xl overflow-hidden shadow-2xl border-4 border-white/10 shrink-0 animate-z"
+                        >
+                           <img 
+                              src={reRitualProduct.image} 
+                              alt={reRitualProduct.name} 
+                              className="w-full h-full object-cover transform hover:scale-105 transition duration-700" 
+                           />
+                           <div className="absolute top-4 left-4 bg-[#c5a059] text-white px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest shadow-md">
+                              Subscribers & Returning Customers
+                           </div>
+                        </motion.div>
+                        
+                        {/* Info side */}
+                        <motion.div 
+                           initial={{ opacity: 0, x: 30 }}
+                           whileInView={{ opacity: 1, x: 0 }}
+                           viewport={{ once: true }}
+                           transition={{ duration: 0.6 }}
+                           className="w-full md:w-1/2 z-10 flex flex-col justify-center text-left"
+                        >
+                           <span className="text-[#c5a059] text-xs font-bold uppercase tracking-[0.25em] mb-3 block">
+                              CONTINUE YOUR JOURNEY
+                           </span>
+                           <h3 className="text-3xl md:text-5xl font-serif font-black mb-4 leading-tight">
+                              {reRitualProduct.name}
+                           </h3>
+                           <p className="text-white/80 text-sm md:text-base mb-6 leading-relaxed">
+                              Already purchased the combo? Continue using it regularly for consistent results. 
+                              Re-Ritual comes with **7 packs of Rosemary raw materials** to ensure your hair wellness journey is uninterrupted.
+                           </p>
+                           
+                           {/* Price & Offer Badges */}
+                           <div className="flex flex-wrap items-center gap-4 mb-8">
+                              <span className="text-3xl font-bold text-[#c5a059]">
+                                 ₹{reRitualProduct.price}
+                              </span>
+                              {reRitualProduct.originalPrice > reRitualProduct.price && (
+                                 <span className="text-lg line-through text-white/40">
+                                    ₹{reRitualProduct.originalPrice}
+                                 </span>
+                              )}
+                              <div className="bg-white/10 text-white border border-white/20 px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5">
+                                 <span className="w-1.5 h-1.5 rounded-full bg-[#c5a059] animate-ping" />
+                                 Voice Review Offer Available
+                              </div>
+                           </div>
+
+                           {/* Benefits bullets */}
+                           <div className="grid grid-cols-2 gap-4 mb-8 text-xs text-white/80">
+                              <div className="flex items-center gap-2">
+                                 <div className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-[#c5a059] shrink-0 font-bold">✓</div>
+                                 <span>7 Powder Packets</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                 <div className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-[#c5a059] shrink-0 font-bold">✓</div>
+                                 <span>100% Organic Rosemary</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                 <div className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-[#c5a059] shrink-0 font-bold">✓</div>
+                                 <span>Ayurvedic Heritage</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                 <div className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-[#c5a059] shrink-0 font-bold">✓</div>
+                                 <span>Dandruff & Fall Control</span>
+                              </div>
+                           </div>
+
+                           <div className="flex flex-wrap gap-4">
+                              <Link 
+                                 to={`/product/${reRitualProduct._id}`}
+                                 className="inline-flex items-center gap-2 px-8 py-3.5 bg-[#c5a059] text-white hover:bg-[#b38f4d] rounded-full font-bold shadow-lg shadow-[#c5a059]/20 transition-all group"
+                              >
+                                 <span>Browse Re-Ritual</span>
+                                 <ArrowRight size={16} className="transform group-hover:translate-x-1 transition-transform" />
+                              </Link>
+                           </div>
+                        </motion.div>
+                     </div>
+                  </section>
+               );
+            })()
+         )}
 
          <section className="py-10 md:py-10 bg-gradient-to-b from-[#fafafa] to-white overflow-hidden">
             <div className="max-w-7xl mx-auto px-4 md:px-6">

@@ -5,7 +5,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import {
   ShoppingBag, Package, Truck, CheckCircle, Trash2, Edit3, Plus, X,
   DollarSign, Users, BarChart3, Calendar, Search, Home, Settings,
-  LogOut, Bell, Menu, ChevronRight, Image, CreditCard, MapPin, Phone, Mail, Download, FileSpreadsheet, MessageSquare
+  LogOut, Bell, Menu, ChevronRight, Image, CreditCard, MapPin, Phone, Mail, Download, FileSpreadsheet, MessageSquare, Mic
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
@@ -552,7 +552,7 @@ const AdminPage = () => {
       return `"${str}"`;
     };
 
-    const headers = ['Order ID', 'Date', 'Time', 'Customer Name', 'Address', 'City', 'State', 'Pincode', 'Phone', 'Alt Phone', 'Email', 'Products', 'Total', 'Payment', 'Delivery Status'];
+    const headers = ['Order ID', 'Date', 'Time', 'Customer Name', 'Address', 'City', 'State', 'Pincode', 'Phone', 'Alt Phone', 'Email', 'Products', 'Total', 'Payment', 'Delivery Status', 'Voice Review Link'];
 
     const rows = filteredOrders.map(order => {
       const targetDate = order.paidAt ? new Date(order.paidAt) : new Date(order.createdAt);
@@ -575,7 +575,8 @@ const AdminPage = () => {
         productsStr,
         order.totalPrice || 0,
         order.isPaid ? 'Paid' : 'UNPAID',
-        order.status || 'Pending'
+        order.status || 'Pending',
+        order.voiceReviewUrl || ''
       ].map(escapeCSV).join(',');
     });
 
@@ -1331,6 +1332,32 @@ const AdminPage = () => {
                               </div>
                             </div>
                           </div>
+                          
+                          {order.voiceReviewUrl && (
+                            <div className="mt-6 p-4 bg-green-50 rounded-2xl border border-green-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-green-600 text-white rounded-xl flex items-center justify-center shrink-0">
+                                  <Mic size={18} />
+                                </div>
+                                <div>
+                                  <p className="font-bold text-green-900 text-sm">🎙️ Voice Review Received</p>
+                                  <p className="text-xs text-green-700 mt-0.5">Please add 1 extra free Rosemary Raw Material packet (Total 8 packets instead of 7) to this order.</p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-3 w-full sm:w-auto">
+                                <audio src={order.voiceReviewUrl} controls className="h-8 flex-grow sm:flex-grow-0" />
+                                <a 
+                                  href={order.voiceReviewUrl} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer" 
+                                  download 
+                                  className="px-4 py-2 bg-[#064e3b] hover:bg-[#c5a059] text-white text-xs font-bold rounded-xl transition-colors flex items-center gap-1.5 shrink-0"
+                                >
+                                  <Download size={14} /> Download
+                                </a>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </motion.div>
                     )}

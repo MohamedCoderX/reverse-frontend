@@ -8,10 +8,18 @@ const userRoutes = require('./routes/userRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
+const fs = require('fs');
 
 connectDB();
 
+// Ensure uploads directory exists for fallback storage
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
 const app = express();
+app.use('/uploads', express.static(uploadsDir));
 const morgan = require('morgan');
 
 app.use(morgan('dev'));

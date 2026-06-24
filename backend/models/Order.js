@@ -42,6 +42,7 @@ const orderSchema = new mongoose.Schema({
   deliveredAt: { type: Date },
   status: { type: String, default: 'Pending' },
   estimatedDelivery: { type: Date },
+  voiceReviewUrl: { type: String, required: false },
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',

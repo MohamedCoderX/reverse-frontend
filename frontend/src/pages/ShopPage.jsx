@@ -28,6 +28,7 @@ const ShopPage = () => {
   const productOrder = [
     'alchemy-combo',
     'alchemy-water',
+    're-ritual',
     'neem-comb',
     'scalp-massager',
     'rosemary-comb-combo',

@@ -142,6 +142,7 @@ const webhookHandler = async (req, res) => {
               items: order.orderItems,
               total: order.totalPrice,
               estimatedDelivery: order.estimatedDelivery,
+              voiceReviewUrl: order.voiceReviewUrl || null,
             });
             if (success) {
               console.log('📧 Email sent via webhook successfully to:', email);

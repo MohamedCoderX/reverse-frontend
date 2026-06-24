@@ -318,11 +318,15 @@ const CheckoutPage = () => {
         return phone.trim();
       };
 
+      const reRitualItem = cartItems.find(item => item._id === 're-ritual' || item.name?.toLowerCase().includes('re-ritual'));
+      const voiceReviewUrl = reRitualItem?.voiceReviewUrl || null;
+
       const orderData = {
         orderItems: cartItems.map(item => ({
           product: item._id,
           qty: Number(item.qty) || 1
         })),
+        voiceReviewUrl,
         shippingAddress: {
           fullName: formData.fullName || '',
           address: formData.address || '',

@@ -86,6 +86,92 @@ export const alchemyProducts = [
     ]
   },
   {
+    _id: 're-ritual',
+    name: 'Re-Ritual',
+    image: new URL('../assets/product-powder .jpeg', import.meta.url).href,
+    description: 'If you’ve already purchased the combo, you can buy Re-Ritual and continue using it regularly for consistent results. It comes with 7 pack of Rosemary Raw Materials.',
+    price: 299,
+    category: 'Hair Care',
+    countInStock: 20,
+    rating: 4.9,
+    numReviews: 127,
+    features: [
+      "Stimulates hair growth",
+      "Hair fall control with Bhringraj",
+      "Scalp health & dandruff control",
+      "DHT control & Anti-greying"
+    ],
+    ingredients: [
+      {
+        name: "Rosemary",
+        description: "The main active ingredient for growth",
+        points: [
+          "Stimulates hair growth: Improves blood circulation to hair follicles",
+          "Reduces hair fall: Strengthens hair roots and prevents premature shedding",
+          "DHT control: May help block DHT (a hormone linked to hair loss)",
+          "Fights dandruff: Has antifungal and antibacterial properties",
+          "Prevents premature greying: Antioxidants reduce oxidative stress"
+        ]
+      },
+      {
+        name: "Bhringraj",
+        description: "King of Hair in Ayurveda - Works deeply on regrowth",
+        points: [
+          "Promotes new hair growth: Activates dormant hair follicles",
+          "Reduces hair thinning: Improves hair density and volume",
+          "Controls hair fall: Strengthens roots from within",
+          "Delays greying: Supports melanin production",
+          "Soothes scalp: Natural cooling and anti-inflammatory effect"
+        ]
+      },
+      {
+        name: "Fenugreek (Methi Seeds)",
+        description: "Natural conditioner + Strengthening agent",
+        points: [
+          "Strengthens hair shaft: High protein helps repair damaged hair",
+          "Reduces hair fall: Nourishes weak roots",
+          "Deep conditioning: Makes hair soft, smooth, and frizz-free",
+          "Fights dandruff: Reduces dryness and flakiness",
+          "Adds shine: Improves overall hair texture"
+        ]
+      },
+      {
+        name: "Black Seeds (Kalonji)",
+        description: "Scalp healing & follicle stimulation",
+        points: [
+          "Boosts hair growth: Stimulates follicles and improves density",
+          "Reduces hair thinning: Strengthens roots and prevents breakage",
+          "Fights scalp infections: Strong antibacterial and antifungal properties",
+          "Improves scalp health: Reduces inflammation and irritation",
+          "May help with bald patches: Supports regrowth when used consistently"
+        ]
+      },
+      {
+        name: "Clove",
+        description: "Circulation booster + Scalp cleanser",
+        points: [
+          "Improves blood circulation: Nutrients reach hair roots faster",
+          "Promotes faster hair growth: Stimulates follicles",
+          "Antimicrobial: Fights dandruff and scalp infections",
+          "Strengthens roots: Reduces breakage and shedding",
+          "Adds mild warmth: Activates scalp (but should be used in moderation)"
+        ]
+      }
+    ],
+    usageTips: [
+      "Use 2–3 times per week initial Stage (not daily if strong)",
+      "Store in refrigerator (max 5–6 days)",
+      "Always strain properly to avoid residue buildup",
+      "Do a patch test before regular use"
+    ],
+    overallEffect: [
+      "Hair growth stimulation: Rosemary + Clove + Kalonji",
+      "Hair fall control: Fenugreek + Bhringraj",
+      "Scalp health & dandruff control: All ingredients combined",
+      "Hair thickness & shine: Fenugreek + Bhringraj"
+    ]
+  },
+  {
     _id: 'neem-comb',
     name: 'Neem Wood Comb',
     image: 'https://i.ibb.co/ycfwLBYm/IMG-4139-1.jpg',

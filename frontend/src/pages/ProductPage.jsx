@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ShoppingCart, Star, Check, ArrowLeft, Minus, Plus, Truck, Shield, Leaf, RotateCcw, Sparkles } from 'lucide-react';
+import { ShoppingCart, Star, Check, ArrowLeft, Minus, Plus, Truck, Shield, Leaf, RotateCcw, Sparkles, Mic, Square, Volume2 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'react-toastify';
 
 const ProductPage = () => {
   const { id } = useParams();
@@ -11,8 +12,130 @@ const ProductPage = () => {
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState('benefits');
-  const { addToCart, clearCart } = useCart();
+  const { addToCart, clearCart, updateVoiceReviewUrl } = useCart();
   const navigate = useNavigate();
+
+  // Voice Review Recorder States
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingDuration, setRecordingDuration] = useState(0);
+  const [audioUrl, setAudioUrl] = useState('');
+  const [audioBlob, setAudioBlob] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadedUrl, setUploadedUrl] = useState(() => {
+    return localStorage.getItem(`voiceReviewUrl_${id}`) || '';
+  });
+  const [uploadError, setUploadError] = useState('');
+
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+  const timerIdRef = useRef(null);
+
+  // Live Timer
+  useEffect(() => {
+    if (isRecording) {
+      timerIdRef.current = setInterval(() => {
+        setRecordingDuration(prev => prev + 1);
+      }, 1000);
+    } else {
+      if (timerIdRef.current) {
+        clearInterval(timerIdRef.current);
+      }
+    }
+    return () => {
+      if (timerIdRef.current) {
+        clearInterval(timerIdRef.current);
+      }
+    };
+  }, [isRecording]);
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      audioChunksRef.current = [];
+      
+      let options = { mimeType: 'audio/webm' };
+      if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+        options = { mimeType: 'audio/ogg' };
+      }
+      if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+        options = { mimeType: '' }; // fallback to default
+      }
+
+      const mediaRecorder = new MediaRecorder(stream, options);
+      mediaRecorderRef.current = mediaRecorder;
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data && event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        setAudioBlob(blob);
+        const url = URL.createObjectURL(blob);
+        setAudioUrl(url);
+        
+        // Stop stream tracks
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      mediaRecorder.start();
+      setRecordingDuration(0);
+      setIsRecording(true);
+      setUploadError('');
+    } catch (err) {
+      console.error('Mic permission or recording start error:', err);
+      setUploadError('Microphone access denied or not supported in this browser.');
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
+
+  const deleteRecording = () => {
+    setAudioUrl('');
+    setAudioBlob(null);
+    setRecordingDuration(0);
+    setUploadError('');
+  };
+
+  const submitVoiceReview = async () => {
+    if (!audioBlob) return;
+    setIsUploading(true);
+    setUploadError('');
+
+    try {
+      const formData = new FormData();
+      formData.append('audio', audioBlob, 'voice-review.webm');
+
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+      const { data } = await axios.post(`${API_URL}/api/upload/review-audio`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      if (data.audioUrl) {
+        setUploadedUrl(data.audioUrl);
+        localStorage.setItem(`voiceReviewUrl_${id}`, data.audioUrl);
+        // Automatically link to cart if product is already in the cart
+        updateVoiceReviewUrl(id, data.audioUrl);
+        toast.success('Voice review submitted successfully!');
+      } else {
+        throw new Error('Upload succeeded but no audio URL was returned');
+      }
+    } catch (err) {
+      console.error('Voice review upload error:', err);
+      setUploadError(err.response?.data?.message || err.message || 'Failed to upload audio. Please try again.');
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -35,13 +158,13 @@ const ProductPage = () => {
 
   const handleAddToCart = () => {
     if (isOutOfStock) return;
-    addToCart(product, quantity);
+    addToCart(product, quantity, uploadedUrl || null);
   };
 
   const handleBuyNow = () => {
     if (isOutOfStock) return;
     clearCart();
-    addToCart(product, quantity);
+    addToCart(product, quantity, uploadedUrl || null);
     navigate('/checkout');
   };
 
@@ -198,13 +321,117 @@ const ProductPage = () => {
               </div>
             </div>
 
-            {/* Features */}
+            {/* Inbuilt Voice Review Component */}
+            {(product._id === 're-ritual' || product.name?.toLowerCase().includes('re-ritual')) && (
+              <div className="my-8 p-6 bg-gradient-to-br from-[#064e3b]/5 to-[#c5a059]/10 rounded-3xl border border-[#064e3b]/10 shadow-sm">
+                <div className="flex items-start gap-4 mb-4">
+                  <div className="w-12 h-12 bg-[#064e3b] text-white rounded-2xl flex items-center justify-center shrink-0 shadow-md">
+                    <Mic size={24} className={isRecording ? 'animate-pulse text-red-500' : ''} />
+                  </div>
+                  <div>
+                    <h3 className="font-serif font-medium text-lg text-[#064e3b]">🎙️ Get 1 Extra Powder Packet FREE!</h3>
+                    <p className="text-xs text-[#064e3b]/70 mt-1 leading-relaxed">
+                      Record a quick 10+ second voice review sharing your experience or excitement about Re-Ritual. We'll automatically add **1 extra Rosemary Raw Material packet** to your order completely free (Total 8 packets instead of 7).
+                    </p>
+                  </div>
+                </div>
+
+                {uploadedUrl ? (
+                  <div className="p-4 bg-white/60 rounded-2xl border border-green-200 flex flex-col items-center text-center">
+                    <div className="w-10 h-10 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-2">
+                      <Check size={20} />
+                    </div>
+                    <p className="text-sm font-bold text-[#064e3b]">Voice Review Submitted!</p>
+                    <p className="text-xs text-[#064e3b]/60 mt-0.5">Your free extra packet has been activated for this item.</p>
+                    <audio src={uploadedUrl} controls className="h-8 max-w-full mt-4" />
+                    <button 
+                      onClick={() => {
+                        setUploadedUrl('');
+                        localStorage.removeItem(`voiceReviewUrl_${id}`);
+                        deleteRecording();
+                      }}
+                      className="text-xs text-red-500 hover:text-red-700 font-medium underline mt-3 transition-colors"
+                    >
+                      Delete and Record Again
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {!audioUrl && (
+                      <div className="flex flex-col items-center justify-center p-6 bg-white/40 border border-dashed border-[#064e3b]/10 rounded-2xl">
+                        {isRecording ? (
+                          <div className="flex flex-col items-center space-y-3">
+                            <div className="flex items-center gap-2">
+                              <span className="w-3 h-3 bg-red-500 rounded-full animate-ping" />
+                              <span className="text-xs font-black uppercase tracking-widest text-[#064e3b]">Recording Live</span>
+                            </div>
+                            <span className="text-3xl font-mono font-bold text-[#064e3b]">
+                              {Math.floor(recordingDuration / 60)}:{(recordingDuration % 60).toString().padStart(2, '0')}
+                            </span>
+                            <button
+                              onClick={stopRecording}
+                              className="px-6 py-2.5 bg-red-500 text-white rounded-full font-medium hover:bg-red-600 transition flex items-center gap-2 shadow-lg shadow-red-200"
+                            >
+                              <Square size={16} /> Stop Recording
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center space-y-3">
+                            <p className="text-xs text-[#064e3b]/50">Click below to grant microphone access and start recording.</p>
+                            <button
+                              onClick={startRecording}
+                              className="px-8 py-3.5 bg-[#064e3b] text-white rounded-full font-medium hover:bg-[#c5a059] transition flex items-center gap-2 shadow-lg shadow-[#064e3b]/20"
+                            >
+                              <Mic size={18} /> Start Recording
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {audioUrl && !isRecording && (
+                      <div className="p-4 bg-white/80 border border-[#064e3b]/10 rounded-2xl flex flex-col items-center">
+                        <span className="text-xs font-black uppercase tracking-widest text-[#064e3b]/40 mb-3 flex items-center gap-1.5">
+                          <Volume2 size={14} /> Review Your Audio Message
+                        </span>
+                        
+                        <audio src={audioUrl} controls className="h-8 max-w-full mb-4" />
+
+                        {recordingDuration < 10 && (
+                          <p className="text-xs text-amber-600 font-bold mb-3">⚠️ Please record for at least 10 seconds to get the free packet.</p>
+                        )}
+
+                        <div className="flex gap-3 w-full">
+                          <button
+                            onClick={deleteRecording}
+                            className="flex-1 py-3 border border-[#064e3b]/10 text-[#064e3b]/60 rounded-xl hover:bg-gray-50 transition font-medium text-sm flex items-center justify-center gap-1"
+                          >
+                            <RotateCcw size={14} /> Re-record
+                          </button>
+                          <button
+                            onClick={submitVoiceReview}
+                            disabled={isUploading || recordingDuration < 10}
+                            className="flex-1 py-3 bg-[#c5a059] text-white rounded-xl hover:bg-[#b38f4d] disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed transition font-medium text-sm flex items-center justify-center gap-1"
+                          >
+                            {isUploading ? 'Uploading...' : 'Submit Review'}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {uploadError && (
+                      <p className="text-xs text-red-500 font-bold text-center mt-2">{uploadError}</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-2 md:gap-4">
               {[
                 { icon: <Truck size={18} />, text: 'Free Shipping' },
                 { icon: <Shield size={18} />, text: 'Quality Guaranteed' },
                 { icon: <Leaf size={18} />, text: '100% Natural' },
-
               ].map((item, i) => (
                 <div key={i} className="flex items-center gap-2 text-[#064e3b]/60 text-xs md:text-sm">
                   <span className="text-[#c5a059]">{item.icon}</span>

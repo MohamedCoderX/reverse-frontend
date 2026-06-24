@@ -1,10 +1,13 @@
-const mongoose = require('mongoose');
 const dotenv = require('dotenv');
+dotenv.config();
+
+const mongoose = require('mongoose');
 const User = require('./models/User');
 const Product = require('./models/Product');
 const connectDB = require('./config/db');
-
-dotenv.config();
+const fs = require('fs');
+const path = require('path');
+const { uploadToCloudinary } = require('./config/cloudinary');
 
 connectDB();
 
@@ -116,6 +119,128 @@ const products = [
         points: [
           'Improves blood circulation: Helps nutrients reach hair roots faster',
           'Promotes faster hair growth: Stimulates follicles',
+          'Antimicrobial: Fights dandruff and scalp infections',
+          'Strengthens roots: Reduces breakage and shedding',
+          'Adds mild warmth: Activates scalp (used in moderation)'
+        ]
+      }
+    ],
+    usageTips: [
+      'Use 2-3 times per week initially (not daily if the formula is strong)',
+      'Store in refrigerator for freshness (max 5-6 days)',
+      'Always strain properly to avoid residue buildup on scalp',
+      'Do a patch test before regular use',
+      'Apply on clean, damp scalp and massage gently for 5 minutes',
+      'Leave it in for best results, or wash after 30 minutes'
+    ]
+  },
+  {
+    _id: 're-ritual',
+    name: 'Re-Ritual',
+    price: 299,
+    originalPrice: 299,
+    description: 'If you’ve already purchased the combo, you can buy Re-Ritual and continue using it regularly for consistent results. It comes with 7 pack of Rosemary Raw Materials.',
+    image: 'https://8upload.com/image/c687fcd4a74c72d7/IMG_4138__1_.jpg',
+    category: 'Hair Care',
+    countInStock: 20,
+    rating: 4.9,
+    numReviews: 127,
+    features: [
+      'Stimulates hair growth',
+      'Reduces hair fall',
+      'Controls dandruff',
+      'Strengthens roots',
+      '100% Natural & Chemical Free'
+    ],
+    benefits: [
+      {
+        title: 'Hair Growth Stimulation',
+        description: 'Rosemary + Clove + Kalonji work together to stimulate dormant follicles',
+        points: [
+          'Improves blood circulation to hair follicles',
+          'Delivers more oxygen and nutrients to roots',
+          'Activates dormant hair follicles'
+        ]
+      },
+      {
+        title: 'Hair Fall Control',
+        description: 'Fenugreek + Bhringraj strengthen roots from within',
+        points: [
+          'Strengthens hair roots and prevents shedding',
+          'Reduces premature hair fall',
+          'Nourishes weak and damaged roots'
+        ]
+      },
+      {
+        title: 'Scalp Health & Dandruff Control',
+        description: 'All ingredients combined fight dandruff and improve scalp health',
+        points: [
+          'Antibacterial and antifungal properties',
+          'Reduces scalp inflammation and irritation',
+          'Cleans scalp and removes buildup'
+        ]
+      },
+      {
+        title: 'Hair Thickness & Shine',
+        description: 'Fenugreek + Bhringraj improve hair density and texture',
+        points: [
+          'Adds volume and thickness to hair',
+          'Makes hair soft, smooth, and frizz-free',
+          'Improves overall hair texture and shine'
+        ]
+      }
+    ],
+    ingredients: [
+      {
+        name: 'Rosemary',
+        description: 'Dried Rosemary Leaves - The main active ingredient',
+        points: [
+          'Stimulates hair growth: Improves blood circulation to hair follicles',
+          'Reduces hair fall: Strengthens hair roots and prevents premature shedding',
+          'DHT control: May help block DHT (a hormone linked to hair loss)',
+          'Fights dandruff: Has antifungal and antibacterial properties',
+          'Prevents premature greying: Antioxidants reduce oxidative stress'
+        ]
+      },
+      {
+        name: 'Bhringraj',
+        description: 'Known as "King of Hair" in Ayurveda',
+        points: [
+          'Promotes new hair growth: Activates dormant hair follicles',
+          'Reduces hair thinning: Improves hair density and volume',
+          'Controls hair fall: Strengthens roots from within',
+          'Delays greying: Supports melanin production',
+          'Soothes scalp: Has natural cooling and anti-inflammatory effect'
+        ]
+      },
+      {
+        name: 'Fenugreek',
+        description: 'Methi Seeds - Natural conditioner + strengthening agent',
+        points: [
+          'Strengthens hair shaft: High protein helps repair damaged hair',
+          'Reduces hair fall: Nourishes weak roots',
+          'Deep conditioning: Makes hair soft, smooth, and frizz-free',
+          'Fights dandruff: Reduces dryness and flakiness',
+          'Adds shine: Improves overall hair texture'
+        ]
+      },
+      {
+        name: 'Black Seeds',
+        description: 'Kalonji / Nigella sativa - Scalp healing and follicle stimulation',
+        points: [
+          'Boosts hair growth: Stimulates follicles and improves density',
+          'Reduces hair thinning: Strengthens roots and prevents breakage',
+          'Fights scalp infections: Strong antibacterial and antifungal properties',
+          'Improves scalp health: Reduces inflammation and irritation',
+          'May help with bald patches: Supports regrowth when used consistently'
+        ]
+      },
+      {
+        name: 'Clove',
+        description: 'Circulation booster + scalp cleanser',
+        points: [
+          'Improves blood circulation: Helps nutrients reach hair roots faster',
+          'Promotes faster hair growth: Directly stimulates follicles',
           'Antimicrobial: Fights dandruff and scalp infections',
           'Strengthens roots: Reduces breakage and shedding',
           'Adds mild warmth: Activates scalp (used in moderation)'
@@ -511,58 +636,6 @@ const products = [
       'Clean both products regularly',
       'Store in dry place'
     ]
-  }, {
-    _id: 'rosemary-massager-combo-sample',
-    name: 'Sample',
-    price: 1,
-    originalPrice: 498,
-    description: 'Boost hair growth with Rosemary Alchemy Water and improve absorption with the Manual Scalp Massager. Perfect for faster results.',
-    image: 'https://i.ibb.co/Z6DHHXdh/rosemary-adn-sclap.jpg',
-    category: 'Combo',
-    countInStock: 15,
-    rating: 4.8,
-    numReviews: 38,
-    features: [
-      'Hair Growth + Better Absorption',
-      'Saves ₹100 compared to buying separately',
-      'Natural ingredients',
-      'Deep scalp massage',
-      'Visible results in 21 days'
-    ],
-    benefits: [
-      {
-        title: 'Hair Growth',
-        description: 'Rosemary Alchemy Water stimulates follicles',
-        points: [
-          'Improves blood circulation',
-          'Activates dormant hair follicles',
-          'Strengthens roots'
-        ]
-      },
-      {
-        title: 'Better Absorption',
-        description: 'Massager helps products penetrate deeper',
-        points: [
-          'Water reaches scalp better',
-          'More effective results',
-          'Deep cleansing during wash'
-        ]
-      },
-      {
-        title: 'Cost Effective',
-        description: 'Save ₹100 while getting both products',
-        points: [
-          'Great value combo',
-          'Everything you need in one order'
-        ]
-      }
-    ],
-    usageTips: [
-      'Spray Rosemary Water on clean scalp',
-      'Use Massager for 5 minutes',
-      'Use 2-3 times per week',
-      'Store water in refrigerator'
-    ]
   },
 ];
 
@@ -575,6 +648,34 @@ const importData = async () => {
     await Product.deleteMany({});
     console.log('Previous data cleared');
 
+    // Dynamic image upload for Re-Ritual
+    let reRitualImageUrl = 'https://8upload.com/image/c687fcd4a74c72d7/IMG_4138__1_.jpg'; // Fallback
+    try {
+      const imagePath = path.join(__dirname, '..', 'frontend', 'src', 'assets', 'product-powder .jpeg');
+      if (fs.existsSync(imagePath)) {
+        console.log('Found Re-Ritual local image, uploading to Cloudinary...');
+        const fileBuffer = fs.readFileSync(imagePath);
+        const result = await uploadToCloudinary({
+          buffer: fileBuffer,
+          fieldname: 'image',
+          originalname: 'product-powder .jpeg'
+        }, 'product');
+        reRitualImageUrl = result.secure_url;
+        console.log('✅ Re-Ritual image uploaded to Cloudinary successfully:', reRitualImageUrl);
+      } else {
+        console.log('⚠️ Re-Ritual local image not found at:', imagePath);
+      }
+    } catch (uploadErr) {
+      console.log('⚠️ Re-Ritual image upload failed:', uploadErr.message);
+    }
+
+    // Assign upload URL to Re-Ritual product in seeded array
+    const reRitualProduct = products.find(p => p._id === 're-ritual');
+    if (reRitualProduct) {
+      reRitualProduct.image = reRitualImageUrl;
+    }
+
+    await User.deleteOne({ email: 'greensignaltamil@gmail.com' });
     const adminUser = await User.create({
       name: 'Admin User',
       email: 'greensignaltamil@gmail.com',

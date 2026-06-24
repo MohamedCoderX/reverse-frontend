@@ -482,7 +482,19 @@ const VideoShowcase = () => {
                             >
                                 <X size={24} className="text-white" />
                             </button>
-                            {selectedVideo.thumbnail.includes('streamable.com') ? (
+                            {selectedVideo.thumbnail.includes('youtube.com') || selectedVideo.thumbnail.includes('youtu.be') ? (
+                                <iframe
+                                    src={`https://www.youtube.com/embed/${
+                                        selectedVideo.thumbnail.includes('youtu.be/') 
+                                            ? selectedVideo.thumbnail.split('youtu.be/')[1]?.split('?')[0] 
+                                            : selectedVideo.thumbnail.split('v=')[1]?.split('&')[0]
+                                    }?autoplay=1`}
+                                    className="w-full h-full"
+                                    frameBorder="0"
+                                    allow="autoplay; encrypted-media; picture-in-picture"
+                                    allowFullScreen
+                                />
+                            ) : selectedVideo.thumbnail.includes('streamable.com') ? (
                                 <iframe
                                     src={`${selectedVideo.thumbnail.includes('/e/') ? selectedVideo.thumbnail : selectedVideo.thumbnail.replace('streamable.com/', 'streamable.com/e/')}?autoplay=1`}
                                     className="w-full h-full"
@@ -497,7 +509,7 @@ const VideoShowcase = () => {
                                     controls
                                     autoPlay
                                     playsInline
-                                    preload="auto"
+                                    preload="none"
                                 />
                             )}
                         </motion.div>
