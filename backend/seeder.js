@@ -257,6 +257,32 @@ const products = [
     ]
   },
   {
+    _id: 're-ritual-test',
+    name: 'Re-Ritual Test (₹1)',
+    price: 1,
+    originalPrice: 299,
+    description: 'Test product for Re-Ritual voice reviews. Re-Ritual comes with 7 pack of Rosemary Raw Materials.',
+    image: 'https://8upload.com/image/c687fcd4a74c72d7/IMG_4138__1_.jpg',
+    category: 'Hair Care',
+    countInStock: 100,
+    rating: 4.9,
+    numReviews: 12,
+    features: [
+      'Test 1 Rupee Checkout',
+      'Voice review testing enabled',
+      'Fills same features as Re-Ritual'
+    ],
+    benefits: [
+      {
+        title: 'Test Checkout Option',
+        description: 'Enables testing for dynamic voice review links at minimum cost.',
+        points: ['₹1 pricing', 'Easy sandbox checkout']
+      }
+    ],
+    ingredients: [],
+    usageTips: []
+  },
+  {
     _id: 'neem-comb',
     name: 'Neem Wood Comb',
     price: 199,
@@ -648,31 +674,18 @@ const importData = async () => {
     await Product.deleteMany({});
     console.log('Previous data cleared');
 
-    // Dynamic image upload for Re-Ritual
-    let reRitualImageUrl = 'https://8upload.com/image/c687fcd4a74c72d7/IMG_4138__1_.jpg'; // Fallback
-    try {
-      const imagePath = path.join(__dirname, '..', 'frontend', 'src', 'assets', 'product-powder .jpeg');
-      if (fs.existsSync(imagePath)) {
-        console.log('Found Re-Ritual local image, uploading to Cloudinary...');
-        const fileBuffer = fs.readFileSync(imagePath);
-        const result = await uploadToCloudinary({
-          buffer: fileBuffer,
-          fieldname: 'image',
-          originalname: 'product-powder .jpeg'
-        }, 'product');
-        reRitualImageUrl = result.secure_url;
-        console.log('✅ Re-Ritual image uploaded to Cloudinary successfully:', reRitualImageUrl);
-      } else {
-        console.log('⚠️ Re-Ritual local image not found at:', imagePath);
-      }
-    } catch (uploadErr) {
-      console.log('⚠️ Re-Ritual image upload failed:', uploadErr.message);
-    }
+    // Use static Cloudinary URL for Re-Ritual to prevent duplication
+    let reRitualImageUrl = 'https://res.cloudinary.com/dwvgw0wn0/image/upload/v1782295783/reverse/product/ej4s1vj4odrey29omu3f.jpg';
 
     // Assign upload URL to Re-Ritual product in seeded array
     const reRitualProduct = products.find(p => p._id === 're-ritual');
     if (reRitualProduct) {
       reRitualProduct.image = reRitualImageUrl;
+    }
+
+    const reRitualTestProduct = products.find(p => p._id === 're-ritual-test');
+    if (reRitualTestProduct) {
+      reRitualTestProduct.image = reRitualImageUrl;
     }
 
     await User.deleteOne({ email: 'greensignaltamil@gmail.com' });

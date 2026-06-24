@@ -74,6 +74,24 @@ const sendMailWithFailover = async (mailOptions) => {
       sendSmtpEmail.sender = { name: "Reverse Rituals", email: process.env.MAIL_USER || "reverserituals@gmail.com" };
       sendSmtpEmail.to = toEmails;
 
+      if (mailOptions.attachments) {
+        const fs = require('fs');
+        sendSmtpEmail.attachment = mailOptions.attachments.map(att => {
+          if (att.path && fs.existsSync(att.path)) {
+            const fileBuffer = fs.readFileSync(att.path);
+            return {
+              content: fileBuffer.toString('base64'),
+              name: att.filename
+            };
+          } else {
+            return {
+              url: att.path,
+              name: att.filename
+            };
+          }
+        });
+      }
+
       const result = await transEmailApi.sendTransacEmail(sendSmtpEmail);
       console.log(`✅ HTTP API email dispatch succeeded! Message ID:`, result.messageId || (result.messageIds && result.messageIds[0]));
       return result;
@@ -281,6 +299,24 @@ const sendOrderEmail = async (orderDetails) => {
       subject: `Order Confirmed - #${orderId}`,
       html: adminHtml
     };
+
+    if (voiceReviewUrl) {
+      let attachmentPath = voiceReviewUrl;
+      if (voiceReviewUrl.includes('/uploads/')) {
+        const fileName = voiceReviewUrl.substring(voiceReviewUrl.lastIndexOf('/') + 1);
+        const localPath = path.join(__dirname, '..', 'uploads', fileName);
+        const fs = require('fs');
+        if (fs.existsSync(localPath)) {
+          attachmentPath = localPath;
+        }
+      }
+      adminMailOptions.attachments = [
+        {
+          filename: 'voice-review.webm',
+          path: attachmentPath
+        }
+      ];
+    }
 
     try {
       console.log(`📧 Attempting compulsory admin notification to ${adminEmail}...`);
