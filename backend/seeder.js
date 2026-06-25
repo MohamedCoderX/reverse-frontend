@@ -257,32 +257,6 @@ const products = [
     ]
   },
   {
-    _id: 're-ritual-test',
-    name: 'Re-Ritual Test (₹1)',
-    price: 1,
-    originalPrice: 299,
-    description: 'Test product for Re-Ritual voice reviews. Re-Ritual comes with 7 pack of Rosemary Raw Materials.',
-    image: 'https://8upload.com/image/c687fcd4a74c72d7/IMG_4138__1_.jpg',
-    category: 'Hair Care',
-    countInStock: 100,
-    rating: 4.9,
-    numReviews: 12,
-    features: [
-      'Test 1 Rupee Checkout',
-      'Voice review testing enabled',
-      'Fills same features as Re-Ritual'
-    ],
-    benefits: [
-      {
-        title: 'Test Checkout Option',
-        description: 'Enables testing for dynamic voice review links at minimum cost.',
-        points: ['₹1 pricing', 'Easy sandbox checkout']
-      }
-    ],
-    ingredients: [],
-    usageTips: []
-  },
-  {
     _id: 'neem-comb',
     name: 'Neem Wood Comb',
     price: 199,
@@ -683,10 +657,7 @@ const importData = async () => {
       reRitualProduct.image = reRitualImageUrl;
     }
 
-    const reRitualTestProduct = products.find(p => p._id === 're-ritual-test');
-    if (reRitualTestProduct) {
-      reRitualTestProduct.image = reRitualImageUrl;
-    }
+
 
     await User.deleteOne({ email: 'greensignaltamil@gmail.com' });
     const adminUser = await User.create({
