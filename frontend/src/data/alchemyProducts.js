@@ -299,31 +299,5 @@ export const alchemyProducts = [
       "Step 3: Comb through with Neem Wood Comb to distribute nutrients",
       "Repeat 3 times per week for best results"
     ]
-  },
-  {
-    _id: 're-ritual-test',
-    name: 'Re-Ritual Test (₹1)',
-    price: 1,
-    originalPrice: 299,
-    description: 'Test product for Re-Ritual voice reviews. Re-Ritual comes with 7 pack of Rosemary Raw Materials.',
-    image: new URL('../assets/product-powder .jpeg', import.meta.url).href,
-    category: 'Hair Care',
-    countInStock: 100,
-    rating: 4.9,
-    numReviews: 12,
-    features: [
-      'Test 1 Rupee Checkout',
-      'Voice review testing enabled',
-      'Fills same features as Re-Ritual'
-    ],
-    benefits: [
-      {
-        title: 'Test Checkout Option',
-        description: 'Enables testing for dynamic voice review links at minimum cost.',
-        points: ['₹1 pricing', 'Easy sandbox checkout']
-      }
-    ],
-    ingredients: [],
-    usageTips: []
   }
 ];

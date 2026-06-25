@@ -21,16 +21,24 @@ const displayPhone = (phone) => {
   const digits = trimmed.replace(/\D/g, '');
   
   if (digits.length === 10) {
-    return `+91 ${trimmed}`;
+    return `+91 ${digits.slice(0, 5)} ${digits.slice(5)}`;
+  }
+  
+  if (digits.length === 11 && digits.startsWith('0')) {
+    const last10 = digits.slice(-10);
+    return `+91 ${last10.slice(0, 5)} ${last10.slice(5)}`;
   }
   
   if (digits.length === 12 && digits.startsWith('91')) {
-    const last10 = trimmed.slice(-10);
-    return `+91 ${last10}`;
+    const last10 = digits.slice(-10);
+    return `+91 ${last10.slice(0, 5)} ${last10.slice(5)}`;
   }
   
-  if (digits.startsWith('91')) {
-    return trimmed.startsWith('+') ? trimmed : `+${trimmed}`;
+  if (digits.startsWith('91') && digits.length > 10) {
+    const last10 = digits.slice(-10);
+    if (last10.length === 10) {
+      return `+91 ${last10.slice(0, 5)} ${last10.slice(5)}`;
+    }
   }
   
   return trimmed;
