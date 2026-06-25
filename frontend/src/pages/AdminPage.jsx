@@ -52,7 +52,7 @@ const AdminPage = () => {
   const [exportDate, setExportDate] = useState('');
   const [exportFromDate, setExportFromDate] = useState('');
   const [exportToDate, setExportToDate] = useState('');
-  const [exportProduct, setExportProduct] = useState('');
+  const [exportProductCombo, setExportProductCombo] = useState('');
   const [exportStatus, setExportStatus] = useState('');
   const [formData, setFormData] = useState({
     name: '', price: '', description: '', image: '', category: '', countInStock: '', images: '', stockStatus: 'in_stock',
@@ -646,54 +646,70 @@ const AdminPage = () => {
   const deliveredOrders = paidOrders.filter(o => o.isDelivered).length;
   const lowStockProducts = products.filter(p => p.countInStock < 5).length;
 
-  const filteredOrders = orders.filter(order => {
-    const fullName = order.shippingAddress?.fullName || '';
-    const orderIdStr = order.orderId || order._id || '';
-    const matchesSearch =
-      fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      orderIdStr.toLowerCase().includes(searchQuery.toLowerCase());
+  const dateFilteredOrders = React.useMemo(() => {
+    return orders.filter(order => {
+      const fullName = order.shippingAddress?.fullName || '';
+      const orderIdStr = order.orderId || order._id || '';
+      const matchesSearch =
+        fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        orderIdStr.toLowerCase().includes(searchQuery.toLowerCase());
 
-    let matchesProduct = true;
-    if (exportProduct) {
-      const selectedProduct = products.find(p => p._id === exportProduct);
-      matchesProduct = order.orderItems?.some(item => {
-        if (!item) return false;
-        const itemProductId = item.product || item._id;
-        const itemProductIdStr = String(itemProductId);
-        const exportProdIdStr = String(exportProduct);
-        const matchesId = itemProductIdStr === exportProdIdStr ||
-          itemProductIdStr.includes(exportProdIdStr) ||
-          exportProdIdStr.includes(itemProductIdStr);
-        const matchesName = selectedProduct && item.name &&
-          item.name.toLowerCase().includes(selectedProduct.name.toLowerCase());
-        return matchesId || matchesName;
-      });
+      let matchesStatus = true;
+      if (exportStatus === 'paid') matchesStatus = order.isPaid;
+      if (exportStatus === 'unpaid') matchesStatus = !order.isPaid;
+
+      const targetDate = order.paidAt ? new Date(order.paidAt) : new Date(order.createdAt);
+      const year = targetDate.getFullYear();
+      const month = String(targetDate.getMonth() + 1).padStart(2, '0');
+      const day = String(targetDate.getDate()).padStart(2, '0');
+      const orderDateStr = `${year}-${month}-${day}`;
+
+      if (exportDate) {
+        const matchesDate = orderDateStr === exportDate;
+        return matchesSearch && matchesDate && matchesStatus;
+      }
+
+      if (exportFromDate || exportToDate) {
+        const from = exportFromDate || '0000-01-01';
+        const to = exportToDate || '9999-12-31';
+        const matchesDateRange = orderDateStr >= from && orderDateStr <= to;
+        return matchesSearch && matchesDateRange && matchesStatus;
+      }
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [orders, searchQuery, exportStatus, exportDate, exportFromDate, exportToDate]);
+
+  const uniqueCombos = React.useMemo(() => {
+    return Array.from(new Set(
+      dateFilteredOrders.map(order => {
+        const combo = order.orderItems
+          ?.map(item => item.name ? item.name.trim() : '')
+          .filter(Boolean)
+          .sort()
+          .join(' & ');
+        return combo || '';
+      }).filter(Boolean)
+    )).sort();
+  }, [dateFilteredOrders]);
+
+  useEffect(() => {
+    if (exportProductCombo && !uniqueCombos.includes(exportProductCombo)) {
+      setExportProductCombo('');
     }
+  }, [exportProductCombo, uniqueCombos]);
 
-    let matchesStatus = true;
-    if (exportStatus === 'paid') matchesStatus = order.isPaid;
-    if (exportStatus === 'unpaid') matchesStatus = !order.isPaid;
-
-    const targetDate = order.paidAt ? new Date(order.paidAt) : new Date(order.createdAt);
-    const year = targetDate.getFullYear();
-    const month = String(targetDate.getMonth() + 1).padStart(2, '0');
-    const day = String(targetDate.getDate()).padStart(2, '0');
-    const orderDateStr = `${year}-${month}-${day}`;
-
-    if (exportDate) {
-      const matchesDate = orderDateStr === exportDate;
-      return matchesSearch && matchesDate && matchesProduct && matchesStatus;
-    }
-
-    if (exportFromDate || exportToDate) {
-      const from = exportFromDate || '0000-01-01';
-      const to = exportToDate || '9999-12-31';
-      const matchesDateRange = orderDateStr >= from && orderDateStr <= to;
-      return matchesSearch && matchesDateRange && matchesProduct && matchesStatus;
-    }
-
-    return matchesSearch && matchesProduct && matchesStatus;
-  });
+  const filteredOrders = React.useMemo(() => {
+    return dateFilteredOrders.filter(order => {
+      if (!exportProductCombo) return true;
+      const orderCombo = order.orderItems
+        ?.map(item => item.name ? item.name.trim() : '')
+        .filter(Boolean)
+        .sort()
+        .join(' & ') || '';
+      return orderCombo === exportProductCombo;
+    });
+  }, [dateFilteredOrders, exportProductCombo]);
 
   const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -1071,13 +1087,13 @@ const AdminPage = () => {
                     <span className="font-bold text-[#064e3b]">Filter & Export</span>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
-                    {(exportDate || exportFromDate || exportToDate) && (
+                    {(exportDate || exportFromDate || exportToDate || exportProductCombo || exportStatus) && (
                       <span className="text-xs text-[#c5a059] font-medium">
                         {filteredOrders.length} orders found
                       </span>
                     )}
                     <button
-                      onClick={() => { setExportDate(''); setExportFromDate(''); setExportToDate(''); setExportProduct(''); setExportStatus(''); }}
+                      onClick={() => { setExportDate(''); setExportFromDate(''); setExportToDate(''); setExportProductCombo(''); setExportStatus(''); }}
                       className="px-3 py-1.5 text-xs text-[#064e3b]/40 hover:text-[#064e3b] border border-[#064e3b]/10 rounded-lg"
                     >
                       Clear Filters
@@ -1085,7 +1101,7 @@ const AdminPage = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
                   {/* Single Date */}
                   <div className="flex flex-col gap-1">
                     <label className="text-xs font-medium text-[#064e3b]/60">Single Date</label>
@@ -1119,17 +1135,17 @@ const AdminPage = () => {
                     />
                   </div>
 
-                  {/* Product Filter */}
+                  {/* Product Combo Filter */}
                   <div className="flex flex-col gap-1">
-                    <label className="text-xs font-medium text-[#064e3b]/60">Filter by Product</label>
+                    <label className="text-xs font-medium text-[#064e3b]/60">Filter by Product Combo</label>
                     <select
-                      value={exportProduct}
-                      onChange={(e) => setExportProduct(e.target.value)}
-                      className="px-3 py-2 border border-[#064e3b]/10 rounded-lg text-sm focus:outline-none focus:border-[#c5a059]"
+                      value={exportProductCombo}
+                      onChange={(e) => setExportProductCombo(e.target.value)}
+                      className="px-3 py-2 border border-[#064e3b]/10 rounded-lg text-sm focus:outline-none focus:border-[#c5a059] bg-white font-medium text-ellipsis overflow-hidden"
                     >
-                      <option value="">All Products</option>
-                      {products.map(product => (
-                        <option key={product._id} value={product._id}>{product.name}</option>
+                      <option value="">All Product Combos</option>
+                      {uniqueCombos.map((combo, idx) => (
+                        <option key={idx} value={combo}>{combo}</option>
                       ))}
                     </select>
                   </div>
@@ -1147,7 +1163,6 @@ const AdminPage = () => {
                       <option value="unpaid">Unpaid Only</option>
                     </select>
                   </div>
-
 
                   {/* Actions */}
                   <div className="flex flex-col gap-2">
@@ -1170,7 +1185,7 @@ const AdminPage = () => {
                 </div>
 
                 {/* Bulk Actions */}
-                {(exportDate || (exportFromDate && exportToDate) || exportProduct || exportStatus) && (
+                {(exportDate || (exportFromDate && exportToDate) || exportProductCombo || exportStatus) && (
                   <div className="mt-4 pt-4 border-t border-[#064e3b]/10">
                     <p className="text-xs font-medium text-[#064e3b]/60 mb-2">Bulk Update (Filtered Orders)</p>
                     <div className="flex flex-wrap gap-2">
