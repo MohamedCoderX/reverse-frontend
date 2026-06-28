@@ -19,6 +19,7 @@ if (!fs.existsSync(uploadsDir)) {
 }
 
 const app = express();
+app.set('trust proxy', true);
 app.use('/uploads', express.static(uploadsDir));
 const morgan = require('morgan');
 

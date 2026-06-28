@@ -45,22 +45,17 @@ const audioUpload = multer({
 });
 
 const uploadToCloudinary = async (file, folder) => {
-  return new Promise((resolve, reject) => {
-    // Audio files are uploaded as 'raw' to prevent Cloudinary format transcode/validation delays or hangs
-    const isAudio = folder === 'audio' || (file.mimetype && file.mimetype.startsWith('audio/'));
-    const resource_type = isAudio ? 'raw' : 'auto';
+  const isAudio = folder === 'audio' || (file.mimetype && file.mimetype.startsWith('audio/'));
+  const resource_type = isAudio ? 'video' : 'auto';
 
-    const uploadStream = cloudinary.uploader.upload_stream(
-      {
-        folder: `reverse/${folder}`,
-        resource_type,
-      },
-      (error, result) => {
-        if (error) reject(error);
-        else resolve(result);
-      }
-    );
-    uploadStream.end(file.buffer);
+  // Convert buffer to data URI
+  const mimeType = file.mimetype || (isAudio ? 'audio/webm' : 'image/jpeg');
+  const base64Data = file.buffer.toString('base64');
+  const fileUri = `data:${mimeType};base64,${base64Data}`;
+
+  return cloudinary.uploader.upload(fileUri, {
+    folder: `reverse/${folder}`,
+    resource_type,
   });
 };
 
