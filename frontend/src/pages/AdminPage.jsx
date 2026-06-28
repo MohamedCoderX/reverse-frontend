@@ -44,6 +44,23 @@ const displayPhone = (phone) => {
   return trimmed;
 };
 
+const getFullUrl = (url) => {
+  if (!url) return '';
+  if (url.startsWith('http://res.cloudinary.com/')) {
+    return url.replace('http://', 'https://');
+  }
+  if (url.startsWith('/uploads/')) {
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+    return `${API_URL.replace(/\/$/, '')}${url}`;
+  }
+  if (url.startsWith('http://') && window.location.protocol === 'https:') {
+    if (!url.includes('localhost') && !url.includes('127.0.0.1')) {
+      return url.replace('http://', 'https://');
+    }
+  }
+  return url;
+};
+
 const AdminPage = () => {
   const { user, logout, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -514,6 +531,24 @@ const AdminPage = () => {
     };
 
     html2pdf().set(opt).from(element).save();
+  };
+
+  const handleDownloadAudio = async (url, filename) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename || 'voice-review.webm';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error('Download failed:', error);
+      window.open(url, '_blank');
+    }
   };
 
   const handleDeleteProduct = async (id) => {
@@ -1368,16 +1403,13 @@ const AdminPage = () => {
                                 </div>
                               </div>
                               <div className="flex items-center gap-3 w-full sm:w-auto">
-                                <audio src={order.voiceReviewUrl} controls className="h-8 flex-grow sm:flex-grow-0" />
-                                <a 
-                                  href={order.voiceReviewUrl} 
-                                  target="_blank" 
-                                  rel="noopener noreferrer" 
-                                  download 
+                                <audio src={getFullUrl(order.voiceReviewUrl)} controls className="h-8 flex-grow sm:flex-grow-0" />
+                                <button 
+                                  onClick={() => handleDownloadAudio(getFullUrl(order.voiceReviewUrl), `voice-review-${order.orderId || order._id}.webm`)}
                                   className="px-4 py-2 bg-[#064e3b] hover:bg-[#c5a059] text-white text-xs font-bold rounded-xl transition-colors flex items-center gap-1.5 shrink-0"
                                 >
                                   <Download size={14} /> Download
-                                </a>
+                                </button>
                               </div>
                             </div>
                           )}
