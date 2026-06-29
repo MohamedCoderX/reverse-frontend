@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Play, Pause } from "lucide-react";
 import { motion } from "framer-motion";
 import axios from "axios";
+import { getAudioPlayUrl } from "../utils/audioHelper";
 
 const VoiceReviewsSection = () => {
   const [reviews, setReviews] = useState([]);
@@ -113,7 +114,7 @@ const VoiceReviewsSection = () => {
 
                   <audio
                     ref={(el) => (audioRefs.current[review._id || review.id] = el)}
-                    src={review.audio}
+                    src={getAudioPlayUrl(review.audio)}
                     preload="none"
                     onTimeUpdate={() => handleTimeUpdate(review._id || review.id)}
                     onEnded={() => setPlayingId(null)}

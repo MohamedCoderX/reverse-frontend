@@ -14,6 +14,7 @@ import html2pdf from 'html2pdf.js';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend, AreaChart, Area } from 'recharts';
 import ImageUpload from '../components/ImageUpload';
 import ReviewsSection from './ReviewsSection';
+import { getAudioPlayUrl, getAudioDownloadUrl } from '../utils/audioHelper';
 
 const displayPhone = (phone) => {
   if (!phone) return '';
@@ -45,20 +46,7 @@ const displayPhone = (phone) => {
 };
 
 const getFullUrl = (url) => {
-  if (!url) return '';
-  if (url.startsWith('http://res.cloudinary.com/')) {
-    return url.replace('http://', 'https://');
-  }
-  if (url.startsWith('/uploads/')) {
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
-    return `${API_URL.replace(/\/$/, '')}${url}`;
-  }
-  if (url.startsWith('http://') && window.location.protocol === 'https:') {
-    if (!url.includes('localhost') && !url.includes('127.0.0.1')) {
-      return url.replace('http://', 'https://');
-    }
-  }
-  return url;
+  return getAudioPlayUrl(url);
 };
 
 const AdminPage = () => {
@@ -535,6 +523,13 @@ const AdminPage = () => {
 
   const handleDownloadAudio = async (url, filename) => {
     try {
+      if (url.includes('res.cloudinary.com')) {
+        // Redirect to Cloudinary's attachment URL to trigger direct download, bypassing CORS
+        const downloadUrl = getAudioDownloadUrl(url, filename);
+        window.location.href = downloadUrl;
+        return;
+      }
+
       const response = await fetch(url);
       const blob = await response.blob();
       const blobUrl = URL.createObjectURL(blob);
@@ -547,7 +542,11 @@ const AdminPage = () => {
       URL.revokeObjectURL(blobUrl);
     } catch (error) {
       console.error('Download failed:', error);
-      window.open(url, '_blank');
+      if (url.includes('res.cloudinary.com')) {
+        window.open(getAudioDownloadUrl(url, filename), '_blank');
+      } else {
+        window.open(url, '_blank');
+      }
     }
   };
 

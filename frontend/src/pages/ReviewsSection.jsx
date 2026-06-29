@@ -5,21 +5,9 @@ import { MessageSquare, Image, Mic, MicOff, Play, Pause, Trash2, Check, X, Plus 
 import { toast } from 'react-toastify';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImageUpload from '../components/ImageUpload';
+import { getAudioPlayUrl } from '../utils/audioHelper';
 const getFullUrl = (url) => {
-  if (!url) return '';
-  if (url.startsWith('http://res.cloudinary.com/')) {
-    return url.replace('http://', 'https://');
-  }
-  if (url.startsWith('/uploads/')) {
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
-    return `${API_URL.replace(/\/$/, '')}${url}`;
-  }
-  if (url.startsWith('http://') && window.location.protocol === 'https:') {
-    if (!url.includes('localhost') && !url.includes('127.0.0.1')) {
-      return url.replace('http://', 'https://');
-    }
-  }
-  return url;
+  return getAudioPlayUrl(url);
 };
 
 const ReviewsSection = () => {
