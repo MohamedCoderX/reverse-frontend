@@ -20,13 +20,15 @@ if (!fs.existsSync(uploadsDir)) {
 
 const app = express();
 app.set('trust proxy', true);
+
+app.use(cors({
+  origin: ['https://reverserituals.in', 'https://www.reverserituals.in', 'http://localhost:5173']
+}));
+
 app.use('/uploads', express.static(uploadsDir));
 const morgan = require('morgan');
 
 app.use(morgan('dev'));
-app.use(cors({
-  origin: ['https://reverserituals.in', 'https://www.reverserituals.in', 'http://localhost:5173']
-}));
 
 // ✅ Webhook needs RAW BODY before JSON parsing
 const webhookHandler = require('./routes/orderRoutes').webhook;
