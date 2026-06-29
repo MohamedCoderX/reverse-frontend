@@ -24,7 +24,15 @@ const handleUploadWithFallback = async (req, file, folder) => {
       storage: 'cloudinary'
     };
   } catch (cloudinaryErr) {
-    console.warn(`⚠️ Cloudinary upload failed: ${cloudinaryErr.message}. Falling back to local storage...`);
+    console.error('❌ Cloudinary upload failed completely:', cloudinaryErr);
+
+    const isProduction = process.env.NODE_ENV === 'production' || req.get('host')?.includes('render.com') || req.get('host')?.includes('onrender.com');
+    if (isProduction) {
+      console.error('❌ Local fallback is disabled in production due to ephemeral filesystem on Render.');
+      throw new Error(`Cloudinary upload failed: ${cloudinaryErr.message}. Local storage fallback is disabled on Render.`);
+    }
+
+    console.warn(`⚠️ Falling back to local storage (Development mode)...`);
 
     // 2. Try Local Server Storage
     try {

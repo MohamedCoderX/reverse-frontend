@@ -2,6 +2,18 @@ const cloudinary = require('cloudinary').v2;
 const multer = require('multer');
 const path = require('path');
 
+// Verify Cloudinary configuration on startup
+const hasCloudinaryEnv = process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET;
+if (!hasCloudinaryEnv) {
+  console.warn(
+    '\n===================================================================================\n' +
+    '⚠️  WARNING: Cloudinary environment variables are missing!\n' +
+    '   Make sure CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET are set.\n' +
+    '   Without these, uploads will fail and local fallback is disabled in production.\n' +
+    '===================================================================================\n'
+  );
+}
+
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
