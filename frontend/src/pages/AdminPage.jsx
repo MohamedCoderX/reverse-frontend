@@ -523,27 +523,43 @@ const AdminPage = () => {
 
   const handleDownloadAudio = async (url, filename) => {
     try {
-      if (url.includes('res.cloudinary.com')) {
-        // Redirect to Cloudinary's attachment URL to trigger direct download, bypassing CORS
-        const downloadUrl = getAudioDownloadUrl(url, filename);
-        window.location.href = downloadUrl;
-        return;
-      }
-
+      // 1. Try to download directly via fetch & blob (works for CORS-enabled resources like Cloudinary and same-origin local files)
       const response = await fetch(url);
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const blob = await response.blob();
       const blobUrl = URL.createObjectURL(blob);
+      
       const link = document.createElement('a');
       link.href = blobUrl;
-      link.download = filename || 'voice-review.webm';
+      
+      // Determine file extension from mimetype if not present in target filename
+      let finalFilename = filename || 'voice-review.webm';
+      if (!finalFilename.includes('.')) {
+        const mimeType = blob.type;
+        if (mimeType.includes('audio/webm') || mimeType.includes('video/webm')) {
+          finalFilename += '.webm';
+        } else if (mimeType.includes('audio/mpeg') || mimeType.includes('audio/mp3')) {
+          finalFilename += '.mp3';
+        } else if (mimeType.includes('audio/ogg')) {
+          finalFilename += '.ogg';
+        } else if (mimeType.includes('audio/wav')) {
+          finalFilename += '.wav';
+        } else {
+          finalFilename += '.webm'; // default fallback
+        }
+      }
+      
+      link.download = finalFilename;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(blobUrl);
     } catch (error) {
-      console.error('Download failed:', error);
+      console.error('Fetch download failed, falling back to direct navigation:', error);
+      // 2. Fallback to direct navigation / Cloudinary attachment headers if fetch fails
       if (url.includes('res.cloudinary.com')) {
-        window.open(getAudioDownloadUrl(url, filename), '_blank');
+        const downloadUrl = getAudioDownloadUrl(url, filename);
+        window.open(downloadUrl, '_blank');
       } else {
         window.open(url, '_blank');
       }

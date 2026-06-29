@@ -25,6 +25,11 @@ export const getAudioPlayUrl = (url) => {
     // Force HTTPS for secure playback
     fullUrl = fullUrl.replace('http://', 'https://');
     
+    // Do NOT convert extension or append .mp3 for raw resources (Cloudinary does not support transcode for raw)
+    if (fullUrl.includes('/raw/')) {
+      return fullUrl;
+    }
+    
     // Convert extension to .mp3 on-the-fly for universal browser support (e.g. macOS Safari / iOS)
     const parts = fullUrl.split('/');
     const lastPart = parts[parts.length - 1];
