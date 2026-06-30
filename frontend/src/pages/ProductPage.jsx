@@ -332,7 +332,7 @@ const ProductPage = () => {
                     <Mic size={24} className={isRecording ? 'animate-pulse text-red-500' : ''} />
                   </div>
                   <div>
-                    <h3 className="font-serif font-medium text-lg text-[#064e3b]">🎙️ Get 1 Extra Powder Packet FREE!</h3>
+                    <h3 className="font-serif font-medium text-lg text-[#064e3b]">🎙️ Get 1 Extra Packet FREE!</h3>
                     <p className="text-xs text-[#064e3b]/70 mt-1 leading-relaxed">
                       Record a quick 10+ second voice review sharing your experience or excitement about Re-Ritual. We'll automatically add **1 extra Rosemary Raw Material packet** to your order completely free (Total 8 packets instead of 7).
                     </p>
