@@ -3,6 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import FloatingCart from './FloatingCart';
+import OfferCountdown from './OfferCountdown';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { ChevronUp } from 'lucide-react';
@@ -32,9 +33,12 @@ const Layout = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen text-[#1a1a1a] overflow-x-hidden">
-      <Navbar />
-      <main className="grow">
+    <div className="flex flex-col min-h-screen text-[#1a1a1a]">
+      <div className="sticky top-0 z-50 flex flex-col w-full">
+        <OfferCountdown />
+        <Navbar />
+      </div>
+      <main className="grow overflow-x-hidden">
         <Outlet />
       </main>
       <FloatingCart />

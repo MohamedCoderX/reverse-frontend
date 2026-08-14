@@ -4,6 +4,7 @@ const { getStockStatus } = require('../models/Product');
 const User = require('../models/User');
 const razorpay = require('../config/razorpay');
 const crypto = require('crypto');
+const { isIndependenceDayOfferActive } = require('../utils/offerUtils');
 
 console.log('=== ORDER CONTROLLER LOADED ===');
 
@@ -105,14 +106,24 @@ const addOrderItems = async (req, res) => {
         });
       }
 
-      const itemTotal = Number(product.price) * qty;
+      let currentPrice = product.price;
+      if (
+        (product.name && product.name.includes('Reverse Ritual Combo')) ||
+        (product._id && product._id.toString() === 'alchemy-combo')
+      ) {
+        if (isIndependenceDayOfferActive()) {
+          currentPrice = 349;
+        }
+      }
+
+      const itemTotal = Number(currentPrice) * qty;
       itemsPrice += itemTotal;
 
       orderItemsWithPrices.push({
         name: product.name,
         qty,
         image: product.image,
-        price: product.price,
+        price: currentPrice,
         product: product._id,
       });
     }

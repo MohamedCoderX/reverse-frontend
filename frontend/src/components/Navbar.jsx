@@ -82,7 +82,7 @@ const Navbar = () => {
   return (
     <>
       {/* Top Bar */}
-      <div className="fixed top-0 left-0 right-0 h-14 bg-white/95 backdrop-blur-md z-50 border-b border-[#064e3b]/10">
+      <div className="h-14 bg-white/95 backdrop-blur-md border-b border-[#064e3b]/10">
 
         <div className="max-w-7xl mx-auto h-full px-4 md:px-6 flex items-center justify-between relative">
 
@@ -314,9 +314,6 @@ const Navbar = () => {
           </>
         )}
       </AnimatePresence>
-
-      {/* Spacer */}
-      <div className="h-14" />
     </>
   );
 };

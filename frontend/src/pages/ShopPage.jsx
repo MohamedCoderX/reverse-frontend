@@ -125,7 +125,17 @@ const ShopPage = () => {
                     <h3 className="text-2xl font-serif font-medium text-[#064e3b] mb-2">{product.name}</h3>
                     <p className="text-[#064e3b]/50 mb-4">{product.description}</p>
                     <div className="flex items-center justify-between">
-                      <span className="text-2xl font-serif italic text-[#c5a059]">₹{product.price}</span>
+                      <div className="flex items-baseline gap-2 flex-wrap">
+                        <span className="text-2xl font-serif italic text-[#c5a059]">₹{product.price}</span>
+                        {product.originalPrice && Number(product.originalPrice) > Number(product.price) && (
+                          <>
+                            <span className="text-sm text-gray-400 line-through">₹{product.originalPrice}</span>
+                            <span className="text-xs bg-[#c5a059] text-white px-2 py-0.5 rounded-full">
+                              {Math.round((1 - product.price / product.originalPrice) * 100)}% OFF
+                            </span>
+                          </>
+                        )}
+                      </div>
                       <button 
                         disabled={isOutOfStock}
                         className={`px-6 py-3 rounded-full font-medium transition-colors ${
