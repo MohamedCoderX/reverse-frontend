@@ -10,7 +10,7 @@ const ProductCard = ({ product }) => {
 
   const isOutOfStock = product.stockStatus === 'out_of_stock' || product.countInStock === 0;
   const isLowStock = !isOutOfStock && product.countInStock <= 10 && product.countInStock > 0;
-  const isIndependenceOffer = product?.name?.toLowerCase().includes('combo');
+  const isIndependenceOffer = product?.name === 'Reverse Ritual Combo';
 
   const handleAddToCart = (e) => {
     e.preventDefault();
