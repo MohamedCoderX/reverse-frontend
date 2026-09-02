@@ -176,6 +176,7 @@ const CheckoutPage = () => {
   };
 
   const displayItems = cartItems;
+  const hasVoiceReview = cartItems.some(item => (item._id === 're-ritual' || item.name?.toLowerCase().includes('re-ritual')) && item.voiceReviewUrl);
 
   const getShippingCharge = (state) => {
     if (!state) return 0;
@@ -480,13 +481,13 @@ const CheckoutPage = () => {
                           className="w-full px-6 py-4 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-2xl focus:outline-none focus:border-[#c5a059] font-medium text-[#064e3b] transition-all" placeholder="Enter your full name" />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black text-[#064e3b]/40 uppercase tracking-widest ml-1">Email {user ? '(Linked)' : '(Optional)'}</label>
+                        <label className="text-[10px] font-black text-[#064e3b]/40 uppercase tracking-widest ml-1">Email {user ? '(Linked)' : '(Required)'}</label>
                         {user?.email ? (
                           <div className="w-full px-6 py-4 bg-gray-100 border border-transparent rounded-2xl text-[#064e3b]/40 font-medium flex items-center gap-2">
                             {user.email} <CheckCircle2 size={14} className="text-green-500" />
                           </div>
                         ) : (
-                          <input type="email" name="email" value={formData.email || ''} onChange={handleChange}
+                          <input type="email" required name="email" value={formData.email || ''} onChange={handleChange}
                             className="w-full px-6 py-4 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-2xl focus:outline-none focus:border-[#c5a059] font-medium text-[#064e3b] transition-all" placeholder="your@email.com" />
                         )}
                       </div>
@@ -608,6 +609,12 @@ const CheckoutPage = () => {
                 </div>
 
                 <div className="space-y-4 pt-6 border-t border-[#064e3b]/10 relative">
+                  {hasVoiceReview && (
+                    <div className="flex justify-between items-center bg-green-50/50 p-3 rounded-xl border border-green-100">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-green-700">🎁 +1 Free Ritual Packet (Voice Review)</span>
+                      <span className="font-black text-green-600 text-sm">FREE</span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-[#064e3b]/60">
                     <span className="text-[10px] font-black uppercase tracking-widest">Subtotal</span>
                     <span className="font-black text-[#064e3b]">₹{cartTotal.toLocaleString()}</span>
